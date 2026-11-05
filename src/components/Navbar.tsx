@@ -15,7 +15,7 @@ export const Navbar = () => {
           <div className="w-8 h-8 rounded-lg bg-[var(--accent-primary)] flex items-center justify-center text-white shadow-sm">
             <Mic className="w-4 h-4 text-white fill-current" />
           </div>
-          <span>melodisnapssss</span>
+          <span>melodisnap</span>
         </NavLink>
 
         {/* Zone 2: Navigation Links */}
@@ -101,7 +101,7 @@ export const Navbar = () => {
           <div className="w-7 h-7 rounded-lg bg-[var(--accent-primary)] flex items-center justify-center text-white">
             <Mic className="w-3.5 h-3.5 text-white fill-current" />
           </div>
-          <span>melodisnap</span>
+          <span>melodisnapssss</span>
         </NavLink>
 
         <button
