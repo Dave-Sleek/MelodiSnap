@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>melodisnap | Identify Every Rhythm</title>
+    <meta name="description" content="Identify every rhythm in seconds. Capture tracks instantly, listen to studio previews, and sync your music library with melodisnap." />
+    <meta property="og:title" content="melodisnap - Identify Every Rhythm" />
+    <meta property="og:description" content="Identify every rhythm in seconds. Capture tracks instantly, listen to studio previews, and sync your music library with melodisnap." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <script>
+      // Suppress benign development Vite HMR WebSocket connection events in Cloud Run preview
+      window.addEventListener('error', function(e) {
+        if (e.filename && e.filename.includes('@vite/client')) {
+          e.stopImmediatePropagation();
+          e.preventDefault();
+          return true;
+        }
+      }, true);
+      window.addEventListener('unhandledrejection', function(e) {
+        if (e.reason && (
+          String(e.reason).includes('WebSocket') ||
+          (e.reason.stack && String(e.reason.stack).includes('@vite/client'))
+        )) {
+          e.stopImmediatePropagation();
+          e.preventDefault();
+        }
+      }, true);
+
+      window.process = { versions: { node: '16.0.0' }, env: {} };
+      window.Buffer = window.Buffer || { isBuffer: function() { return false; }, from: function() { return []; } };
+    </script>
+    <script type="module">
+      import { Buffer } from 'buffer';
+      window.Buffer = Buffer;
+      const script = document.createElement('script');
+      script.src = "https://js-cdn.music.apple.com/musickit/v3/musickit.js";
+      script.crossOrigin = "anonymous";
+      document.body.appendChild(script);
+    </script>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+

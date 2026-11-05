@@ -1,0 +1,6 @@
+{
+  "name": "melodisnap",
+  "description": "Identify every rhythm in seconds. Capture tracks instantly, explore global charts, and sync your music library with melodisnap.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
