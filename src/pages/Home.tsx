@@ -35,8 +35,12 @@ export const Home = ({ isOffline }: { isOffline?: boolean }) => {
     setError(null);
 
     try {
+      const ext = audioBlob.type.includes('webm') ? 'webm' :
+                  audioBlob.type.includes('ogg') ? 'ogg' :
+                  audioBlob.type.includes('mp4') ? 'mp4' : 'wav';
+
       const formData = new FormData();
-      formData.append('audio', audioBlob, 'recording.wav');
+      formData.append('audio', audioBlob, `recording.${ext}`);
 
       const response = await fetch('/api/recognize', {
         method: 'POST',
@@ -57,7 +61,7 @@ export const Home = ({ isOffline }: { isOffline?: boolean }) => {
       }
 
       if (!response.ok) {
-        throw new Error(data.detail || data.error || `Server returned error (${response.status})`);
+        throw new Error(data.error || data.detail || `Server returned error (${response.status})`);
       }
 
       if (data.status === 'success' && data.result) {
@@ -68,14 +72,14 @@ export const Home = ({ isOffline }: { isOffline?: boolean }) => {
           artwork: data.result.spotify?.album?.images?.[0]?.url || data.result.apple_music?.artwork?.url || '',
           spotifyId: data.result.spotify?.id,
           appleMusicId: data.result.apple_music?.id,
-          previewUrl: data.result.spotify?.preview_url || data.result.apple_music?.previews?.[0]?.url,
+          previewUrl: data.result.spotify?.preview_url || data.result.apple_music?.previews?.[0]?.url || `synth:${(data.result.genre || 'pop').toLowerCase()}:${data.result.title}`,
         };
 
         const id = await addToHistory(songData);
         setIdentifiedSong({ ...songData, id });
         loadRecent();
       } else if (data.result === null) {
-        setError('No matching song was found. Try moving closer to the audio source or reducing background noise.');
+        setError('No matching song was found. Try moving closer to the audio source or letting it listen longer.');
       } else {
         setError(data.error || 'The recognition service could not identify this track.');
       }

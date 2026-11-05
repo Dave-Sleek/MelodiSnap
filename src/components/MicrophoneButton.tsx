@@ -60,16 +60,21 @@ export const MicrophoneButton = ({
     }
 
     try {
-      // Request mono audio at 44.1kHz for optimal fingerprinting (common AudD recommendation)
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-          sampleRate: 44100,
-          channelCount: 1
-        } 
-      });
+      // Request raw, unattenuated audio for music recognition (disable voice-only noise cancellation)
+      let stream: MediaStream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ 
+          audio: {
+            echoCancellation: false,
+            noiseSuppression: false,
+            autoGainControl: false,
+            sampleRate: 44100,
+            channelCount: 1
+          } 
+        });
+      } catch {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      }
       setPermissionStatus('granted');
       
       // Set up real-time audio volume analysis
@@ -109,7 +114,7 @@ export const MicrophoneButton = ({
 
       const mediaRecorder = new MediaRecorder(stream, { 
         mimeType,
-        audioBitsPerSecond: 128000 // Higher bitrate for better fingerprinting
+        audioBitsPerSecond: 128000 // High bitrate for crystal clear acoustic fingerprinting
       });
       mediaRecorderRef.current = mediaRecorder;
       chunksRef.current = [];
@@ -126,8 +131,8 @@ export const MicrophoneButton = ({
           const audioBlob = new Blob(chunksRef.current, { type: mediaRecorder.mimeType });
           
           // AudD needs at least a few seconds for a reliable fingerprint
-          if (audioBlob.size < 4000) { // Extremely small file check
-            showToast('Recording too short or silent. Please try again.', 'info');
+          if (audioBlob.size < 4000) {
+            showToast('Recording too short or silent. Please ensure music is playing clearly.', 'info');
             onCancel();
           } else {
             onRecognitionFinished(audioBlob);
@@ -141,8 +146,8 @@ export const MicrophoneButton = ({
         cleanupAudioNodes();
       };
 
-      // Start recording with a timeslice to ensure dataavailable fires regularly
-      mediaRecorder.start(1000); 
+      // Start recording with timeslice to ensure dataavailable fires regularly
+      mediaRecorder.start(500); 
       setIsListening(true);
       setTimer(0);
       onRecognitionStarted();
@@ -163,7 +168,8 @@ export const MicrophoneButton = ({
   };
 
   useEffect(() => {
-    if (timer >= 12 && isListening) {
+    // Optimal automatic recognition window: 10 seconds
+    if (timer >= 10 && isListening) {
       stopRecording();
     }
   }, [timer, isListening]);
@@ -171,13 +177,20 @@ export const MicrophoneButton = ({
   const stopRecording = () => {
     if (!mediaRecorderRef.current || mediaRecorderRef.current.state === 'inactive') return;
 
-    // Minimum recording duration of 4 seconds for AudD accuracy (increased from 3s)
-    if (timer < 4) {
-      showToast('Please record for at least 4 seconds for better accuracy.', 'info');
+    // Minimum recording duration of 5 seconds for AudD constellation fingerprint accuracy
+    if (timer < 5) {
+      showToast('Listening for music... please allow at least 5 seconds for an accurate match.', 'info');
       return;
     }
 
     if (mediaRecorderRef.current.state === 'recording') {
+      try {
+        if (typeof mediaRecorderRef.current.requestData === 'function') {
+          mediaRecorderRef.current.requestData();
+        }
+      } catch (e) {
+        console.warn('requestData error:', e);
+      }
       mediaRecorderRef.current.stop();
     }
     if (timerIntervalRef.current) {
@@ -307,7 +320,7 @@ export const MicrophoneButton = ({
           {permissionStatus === 'denied' 
             ? 'Access Blocked' 
             : isListening 
-              ? `Listening... (${timer}s)` 
+              ? (timer < 5 ? `Listening... (${timer}s / 5s)` : `Listening... (${timer}s) · Tap to finish`)
               : isProcessing 
                 ? 'Matching Audio Footprint' 
                 : 'Tap to Identify'}
@@ -335,7 +348,7 @@ export const MicrophoneButton = ({
           ) : (
             <p>
               {isListening 
-                ? 'Hold your device close to the audio source for the best match.' 
+                ? (timer < 5 ? 'Keep device near the music for at least 5 seconds...' : 'Song audio captured! Tap stop or let it finish.') 
                 : isProcessing 
                   ? 'Searching through acoustic fingerprints...' 
                   : 'Identify any song playing on the radio, TV, or around you.'}

@@ -73,16 +73,44 @@ apiRouter.post('/recognize', upload.single('audio'), async (req, res) => {
       });
     }
 
-    console.log(`[Proxy] Forwarding ${req.file.size} bytes (${req.file.mimetype}) to AudD API...`);
+    console.log(`[Proxy] Received ${req.file.size} bytes (${req.file.mimetype}) audio payload`);
+
+    // Detect actual container format from file magic bytes for 100% reliable decoding
+    let extension = 'webm';
+    let mime = req.file.mimetype || 'audio/webm';
+
+    if (req.file.buffer.length >= 4) {
+      // WebM / Matroska (0x1A 0x45 0xDF 0xA3)
+      if (req.file.buffer[0] === 0x1a && req.file.buffer[1] === 0x45 && req.file.buffer[2] === 0xdf && req.file.buffer[3] === 0xa3) {
+        extension = 'webm';
+        mime = 'audio/webm';
+      } else if (req.file.buffer.slice(0, 4).toString('ascii') === 'OggS') {
+        extension = 'ogg';
+        mime = 'audio/ogg';
+      } else if (req.file.buffer.length >= 8 && req.file.buffer.slice(4, 8).toString('ascii') === 'ftyp') {
+        extension = 'mp4';
+        mime = 'audio/mp4';
+      } else if (req.file.buffer.slice(0, 4).toString('ascii') === 'RIFF') {
+        extension = 'wav';
+        mime = 'audio/wav';
+      } else if (req.file.mimetype?.includes('webm')) {
+        extension = 'webm';
+        mime = 'audio/webm';
+      } else if (req.file.mimetype?.includes('ogg')) {
+        extension = 'ogg';
+        mime = 'audio/ogg';
+      } else if (req.file.mimetype?.includes('mp4')) {
+        extension = 'mp4';
+        mime = 'audio/mp4';
+      }
+    }
+
+    console.log(`[Proxy] Detected audio container: .${extension} (${mime}), forwarding to AudD API...`);
 
     const form = new FormData();
-    const extension = req.file.mimetype?.includes('webm') ? 'webm' : 
-                      req.file.mimetype?.includes('ogg') ? 'ogg' : 
-                      req.file.mimetype?.includes('mp4') ? 'mp4' : 'wav';
-    
     form.append('file', req.file.buffer, {
-      filename: `audio.${extension}`,
-      contentType: req.file.mimetype || 'audio/wav',
+      filename: `recording.${extension}`,
+      contentType: mime,
     });
     form.append('api_token', apiToken);
     form.append('return', 'spotify,apple_music');
@@ -94,10 +122,13 @@ apiRouter.post('/recognize', upload.single('audio'), async (req, res) => {
 
     if (response.data.status === 'error') {
       console.error('[AudD] API Error Response:', JSON.stringify(response.data.error, null, 2));
-      return res.status(502).json({ 
-        error: 'Recognition service returned an error.',
-        detail: response.data.error.error_message,
-        code: response.data.error.error_code
+      const isAcousticFail = response.data.error?.error_code === 300;
+      return res.status(isAcousticFail ? 422 : 502).json({ 
+        error: isAcousticFail 
+          ? "Could not hear the song clearly. Please hold your device closer to the music, let it listen for at least 5-8 seconds, and try again."
+          : 'Recognition service returned an error.',
+        detail: response.data.error?.error_message,
+        code: response.data.error?.error_code
       });
     }
 
