@@ -49,14 +49,17 @@ export const Home = ({ isOffline }: { isOffline?: boolean }) => {
 
       const text = await response.text();
       
-      if (text.trim().startsWith('<!doctype html>') || text.trim().startsWith('<html')) {
-        throw new Error('The server returned an invalid response. Please ensure backend services are active.');
-      }
-
-      let data;
+      let data: any;
       try {
         data = JSON.parse(text);
       } catch {
+        const lower = text.toLowerCase();
+        if (lower.includes('<!doctype html') || lower.includes('<html') || lower.includes('<head')) {
+          if (response.status === 404) {
+            throw new Error('API route /api/recognize was not found (404). Please ensure vercel.json is committed and AUDD_API_TOKEN is added to Vercel Environment Variables.');
+          }
+          throw new Error('Backend service returned an HTML error instead of JSON. Please verify your Vercel deployment and environment variables.');
+        }
         throw new Error('Invalid JSON response received from recognition service.');
       }
 

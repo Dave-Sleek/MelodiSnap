@@ -198,28 +198,31 @@ app.use('/api', (req, res) => {
 
 /**
  * VITE / STATIC HANDLER
+ * Only active in standalone Node.js environments (bypassed on Vercel where Vercel CDN serves static assets)
  */
-if (process.env.NODE_ENV === 'production') {
-  const distPath = path.join(__dirname, 'dist');
-  app.use(express.static(distPath));
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(distPath, 'index.html'));
-  });
-} else {
-  try {
-    const { createServer: createViteServer } = await import('vite');
-    const isHmrDisabled = process.env.DISABLE_HMR === 'true';
-    const vite = await createViteServer({
-      server: { 
-        middlewareMode: true,
-        hmr: isHmrDisabled ? false : { server },
-      },
-      appType: 'spa',
+if (process.env.VERCEL !== '1') {
+  if (process.env.NODE_ENV === 'production') {
+    const distPath = path.join(__dirname, 'dist');
+    app.use(express.static(distPath));
+    app.get('*', (req, res) => {
+      res.sendFile(path.join(distPath, 'index.html'));
     });
-    app.use(vite.middlewares);
-  } catch (viteError: any) {
-    console.error('[Fatal] Failed to create Vite server:', viteError);
-    process.exit(1);
+  } else {
+    try {
+      const { createServer: createViteServer } = await import('vite');
+      const isHmrDisabled = process.env.DISABLE_HMR === 'true';
+      const vite = await createViteServer({
+        server: { 
+          middlewareMode: true,
+          hmr: isHmrDisabled ? false : { server },
+        },
+        appType: 'spa',
+      });
+      app.use(vite.middlewares);
+    } catch (viteError: any) {
+      console.error('[Fatal] Failed to create Vite server:', viteError);
+      process.exit(1);
+    }
   }
 }
 
@@ -230,6 +233,10 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   res.status(500).json({ error: 'Internal server error', message: err.message });
 });
 
-server.listen(port, () => {
-  console.log(`[melodisnap] Server fully active on port ${port}`);
-});
+if (process.env.VERCEL !== '1') {
+  server.listen(port, () => {
+    console.log(`[melodisnap] Server fully active on port ${port}`);
+  });
+}
+
+export default app;
