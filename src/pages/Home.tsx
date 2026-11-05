@@ -53,17 +53,17 @@ export const Home = ({ isOffline }: { isOffline?: boolean }) => {
       try {
         data = JSON.parse(text);
       } catch {
-        const lower = text.toLowerCase();
-        if (lower.includes('<!doctype html') || lower.includes('<html') || lower.includes('<head')) {
-          if (response.status === 404) {
-            throw new Error('API route /api/recognize was not found (404). Please ensure vercel.json is committed and AUDD_API_TOKEN is added to Vercel Environment Variables.');
-          }
-          throw new Error('Backend service returned an HTML error instead of JSON. Please verify your Vercel deployment and environment variables.');
+        if (response.status === 404) {
+          throw new Error('Recognition API (/api/recognize) was not found (HTTP 404). Please ensure the latest api/ directory and vercel.json are pushed to GitHub.');
         }
-        throw new Error('Invalid JSON response received from recognition service.');
+        if (response.status === 500 || response.status === 502 || response.status === 503 || response.status === 504) {
+          throw new Error(`Server returned HTTP ${response.status}. Please verify in Vercel Settings > Environment Variables that AUDD_API_TOKEN is added and redeploy.`);
+        }
+        const snippet = text.slice(0, 120).trim();
+        throw new Error(snippet ? `Recognition error: ${snippet}` : 'No response received from recognition service.');
       }
 
-      if (!response.ok) {
+      if (!response.ok || data.status === 'error') {
         throw new Error(data.error || data.detail || `Server returned error (${response.status})`);
       }
 

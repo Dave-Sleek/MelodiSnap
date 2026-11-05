@@ -1,10 +1,23 @@
-import app from '../server';
-
-// Disable default body parser on Vercel so multer can handle multipart audio stream
 export const config = {
-  api: {
-    bodyParser: false,
-  },
+  runtime: 'edge',
 };
 
-export default app;
+export default async function handler() {
+  return new Response(
+    JSON.stringify({
+      app: 'melodisnap',
+      status: 'online',
+      endpoints: [
+        { path: '/api/recognize', method: 'POST', description: 'AudD song recognition proxy' },
+        { path: '/api/health', method: 'GET', description: 'Health and service configuration check' },
+      ],
+    }),
+    {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+      },
+    }
+  );
+}

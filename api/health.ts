@@ -1,0 +1,37 @@
+export const config = {
+  runtime: 'edge',
+};
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+};
+
+export default async function handler(request: Request) {
+  if (request.method === 'OPTIONS') {
+    return new Response(null, {
+      status: 204,
+      headers: corsHeaders,
+    });
+  }
+
+  return new Response(
+    JSON.stringify({
+      status: 'ok',
+      runtime: 'vercel-edge',
+      config: {
+        audd: !!process.env.AUDD_API_TOKEN,
+        spotify: !!process.env.VITE_SPOTIFY_CLIENT_ID,
+        apple: !!process.env.APPLE_TEAM_ID && !!process.env.APPLE_KEY_ID,
+      },
+    }),
+    {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        ...corsHeaders,
+      },
+    }
+  );
+}
