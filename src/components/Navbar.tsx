@@ -101,7 +101,7 @@ export const Navbar = () => {
           <div className="w-7 h-7 rounded-lg bg-[var(--accent-primary)] flex items-center justify-center text-white">
             <Mic className="w-3.5 h-3.5 text-white fill-current" />
           </div>
-          <span>melodisnapssss</span>
+          <span>melodisnap</span>
         </NavLink>
 
         <button

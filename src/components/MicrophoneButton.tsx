@@ -67,9 +67,7 @@ export const MicrophoneButton = ({
           audio: {
             echoCancellation: false,
             noiseSuppression: false,
-            autoGainControl: false,
-            sampleRate: 44100,
-            channelCount: 1
+            autoGainControl: true, // Keeps ambient music loud and clear for fingerprinting
           } 
         });
       } catch {
@@ -112,10 +110,15 @@ export const MicrophoneButton = ({
             ? 'audio/mp4'
             : 'audio/webm';
 
-      const mediaRecorder = new MediaRecorder(stream, { 
-        mimeType,
-        audioBitsPerSecond: 128000 // High bitrate for crystal clear acoustic fingerprinting
-      });
+      let mediaRecorder: MediaRecorder;
+      try {
+        mediaRecorder = new MediaRecorder(stream, { 
+          mimeType,
+          audioBitsPerSecond: 128000 // High bitrate for crystal clear acoustic fingerprinting
+        });
+      } catch {
+        mediaRecorder = new MediaRecorder(stream);
+      }
       mediaRecorderRef.current = mediaRecorder;
       chunksRef.current = [];
 

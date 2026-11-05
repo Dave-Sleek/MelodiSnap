@@ -3,13 +3,14 @@ import { MicrophoneButton } from '../components/MicrophoneButton';
 import { SongCard } from '../components/SongCard';
 import { addToHistory, toggleFavourite, getHistory } from '../lib/db';
 import { motion, AnimatePresence } from 'framer-motion';
-import { WifiOff, AlertCircle, Compass, History, Sparkles } from 'lucide-react';
+import { WifiOff, AlertCircle, Compass, History, Sparkles, SearchX } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export const Home = ({ isOffline }: { isOffline?: boolean }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [identifiedSong, setIdentifiedSong] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const [noMatch, setNoMatch] = useState(false);
   const [recentTracks, setRecentTracks] = useState<any[]>([]);
 
   useEffect(() => {
@@ -27,12 +28,14 @@ export const Home = ({ isOffline }: { isOffline?: boolean }) => {
 
   const handleRecognitionStarted = () => {
     setError(null);
+    setNoMatch(false);
     setIdentifiedSong(null);
   };
 
   const handleRecognitionFinished = async (audioBlob: Blob) => {
     setIsProcessing(true);
     setError(null);
+    setNoMatch(false);
 
     try {
       const ext = audioBlob.type.includes('webm') ? 'webm' :
@@ -82,13 +85,12 @@ export const Home = ({ isOffline }: { isOffline?: boolean }) => {
         setIdentifiedSong({ ...songData, id });
         loadRecent();
       } else if (data.result === null) {
-        setError('No matching song was found. Try moving closer to the audio source or letting it listen longer.');
+        setNoMatch(true);
       } else {
         setError(data.error || 'The recognition service could not identify this track.');
       }
     } catch (err: any) {
       console.error('Recognition UI Error:', err);
-      // provide more detailed error message if possible
       let errorMessage = 'A network error occurred. Please check your connection and try again.';
       
       if (err instanceof Error) {
@@ -125,7 +127,7 @@ export const Home = ({ isOffline }: { isOffline?: boolean }) => {
         )}
 
         <main className="flex flex-col items-center">
-          {!identifiedSong && !error && (
+          {!identifiedSong && !error && !noMatch && (
             isOffline ? (
               <div className="text-center space-y-4 py-12">
                 <div className="w-20 h-20 bg-[var(--subtle-btn-bg)] rounded-full flex items-center justify-center mx-auto text-[var(--text-muted)] border border-[var(--glass-border)]">
@@ -147,8 +149,55 @@ export const Home = ({ isOffline }: { isOffline?: boolean }) => {
           )}
 
           <AnimatePresence mode="wait">
+            {noMatch && (
+              <motion.div
+                key="no-match"
+                initial={{ opacity: 0, scale: 0.96, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.96, y: 10 }}
+                transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                className="w-full max-w-lg glass-card rounded-3xl p-7 sm:p-8 text-center border border-amber-500/30 shadow-2xl my-6"
+              >
+                <div className="w-14 h-14 bg-amber-500/15 text-amber-500 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-amber-500/20 shadow-lg shadow-amber-500/10">
+                  <SearchX className="w-7 h-7" />
+                </div>
+                <h3 className="text-xl font-bold text-[var(--text-main)] mb-2 tracking-tight">No Matching Song Found</h3>
+                <p className="text-sm text-[var(--text-muted)] leading-relaxed mb-6 max-w-sm mx-auto">
+                  Your audio was processed clearly, but wasn't recognized in the music fingerprint database.
+                </p>
+
+                <div className="text-left bg-[var(--subtle-btn-bg)] rounded-2xl p-4 sm:p-5 mb-6 space-y-3 text-xs text-[var(--text-muted)] border border-[var(--glass-border)]">
+                  <div className="font-semibold text-[var(--text-main)] flex items-center gap-1.5 text-xs">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-400" /> Tips for an accurate match:
+                  </div>
+                  <ul className="space-y-2.5 list-none pl-0">
+                    <li className="flex items-start gap-2.5">
+                      <span className="text-amber-400 font-bold">•</span>
+                      <span><strong>Play official released music</strong> through speakers. Humming, whistling, or singing acapella cannot be matched.</span>
+                    </li>
+                    <li className="flex items-start gap-2.5">
+                      <span className="text-amber-400 font-bold">•</span>
+                      <span><strong>Move closer to the speaker</strong> so the song's beat and melody are louder than room noise.</span>
+                    </li>
+                    <li className="flex items-start gap-2.5">
+                      <span className="text-amber-400 font-bold">•</span>
+                      <span><strong>Listen during the chorus or beat</strong> for 6–10 seconds rather than quiet intros or spoken voice.</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <button 
+                  onClick={() => setNoMatch(false)}
+                  className="btn-primary-glass px-8 py-3 rounded-xl font-bold text-xs tracking-wider shadow-lg active:scale-95 text-white"
+                >
+                  Try Again
+                </button>
+              </motion.div>
+            )}
+
             {error && (
               <motion.div
+                key="error"
                 initial={{ opacity: 0, scale: 0.96, y: 10 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.96, y: 10 }}
