@@ -7,13 +7,22 @@ import { useAudioPlayer } from '../context/AudioPlayerContext';
 import { useShareModal } from '../context/ShareModalContext';
 import { motion } from 'framer-motion';
 
+import spotlightCover from '../assets/images/spotlight_album_cover_1793740735353.jpg';
+import cyberOverdriveCover from '../assets/images/album_cyber_overdrive_1793740736413.jpg';
+import lofiCafeCover from '../assets/images/album_lofi_cafe_1793740735959.jpg';
+import deepAmbientCover from '../assets/images/album_deep_ambient_1793740736282.jpg';
+import synthwaveNeonCover from '../assets/images/album_synthwave_neon_1793739282838.jpg';
+import nocturnalRnbCover from '../assets/images/album_nocturnal_rnb_1793739283528.jpg';
+import indieDreamPopCover from '../assets/images/album_indie_dream_pop_1793739284262.jpg';
+import cinematicAmbientCover from '../assets/images/album_cinematic_ambient_1793739284039.jpg';
+
 // Curated high-fidelity discovery tracks with 100% guaranteed playable preview streams and studio artwork
 const SPOTLIGHT_TRACK: SongResult = {
   id: 'spotlight-1',
   title: 'Chromatic Fusion',
   artist: 'The Ambient Collective',
   album: 'Ambient Soundscapes',
-  artwork: '/src/assets/images/spotlight_album_cover_1793740735353.jpg',
+  artwork: spotlightCover,
   previewUrl: 'synth:ambient:spotlight',
   spotifyId: '2V6Vkv9YvqcS2SQUm0S4S7',
   genre: 'Ambient',
@@ -27,7 +36,7 @@ const DISCOVERY_TRACKS: (SongResult & { shazamCount: string; trendRank: number; 
     title: 'Neon Voyager',
     artist: 'Nightwave Cybernetics',
     album: 'Nightdrive Obsession',
-    artwork: '/src/assets/images/album_cyber_overdrive_1793740736413.jpg',
+    artwork: cyberOverdriveCover,
     previewUrl: 'synth:synthwave:neon-voyager',
     spotifyId: '7MXVkv9YvqcS2SQUm0S4S7',
     genre: 'Synthwave',
@@ -41,7 +50,7 @@ const DISCOVERY_TRACKS: (SongResult & { shazamCount: string; trendRank: number; 
     title: 'Rainy Day Lo-Fi Beats',
     artist: 'Aesthetic Chill Sessions',
     album: 'A Lo-Fi Journey Vol. 1',
-    artwork: '/src/assets/images/album_lofi_cafe_1793740735959.jpg',
+    artwork: lofiCafeCover,
     previewUrl: 'synth:lofi:rainy-day',
     spotifyId: '5Z9GvP9XvqcS2SQUm0S4S7',
     genre: 'Lo-Fi',
@@ -55,7 +64,7 @@ const DISCOVERY_TRACKS: (SongResult & { shazamCount: string; trendRank: number; 
     title: 'Arcturus Mist & Stone',
     artist: 'Nordic Monoliths',
     album: 'Ethereal Fjord Echoes',
-    artwork: '/src/assets/images/album_deep_ambient_1793740736282.jpg',
+    artwork: deepAmbientCover,
     previewUrl: 'synth:ambient:arcturus',
     spotifyId: '3VJVkv9YvqcS2SQUm0S4S7',
     genre: 'Ambient',
@@ -69,7 +78,7 @@ const DISCOVERY_TRACKS: (SongResult & { shazamCount: string; trendRank: number; 
     title: 'Neon Pulse Overdrive',
     artist: 'Vector Runner',
     album: 'Prism Overdrive',
-    artwork: '/src/assets/images/album_synthwave_neon_1793739282838.jpg',
+    artwork: synthwaveNeonCover,
     previewUrl: 'synth:synthwave:neon-pulse',
     spotifyId: '1Bxfu_98v9Sajm9Sajm9Sa',
     genre: 'Synthwave',
@@ -83,7 +92,7 @@ const DISCOVERY_TRACKS: (SongResult & { shazamCount: string; trendRank: number; 
     title: 'Midnight Velvet',
     artist: 'Isaiah Jade',
     album: 'Rain-Slicked Boulevard',
-    artwork: '/src/assets/images/album_nocturnal_rnb_1793739283528.jpg',
+    artwork: nocturnalRnbCover,
     previewUrl: 'synth:rnb:midnight-velvet',
     spotifyId: '4Dvkj6JhhA12v3Sajm9Sa',
     genre: 'R&B',
@@ -97,7 +106,7 @@ const DISCOVERY_TRACKS: (SongResult & { shazamCount: string; trendRank: number; 
     title: 'Aurora Flow',
     artist: "Luna's Glow",
     album: 'Holographic Dreams',
-    artwork: '/src/assets/images/album_indie_dream_pop_1793739284262.jpg',
+    artwork: indieDreamPopCover,
     previewUrl: 'synth:dreampop:aurora-flow',
     spotifyId: '2Fkj21Sm7Ym9Sajm9Sa',
     genre: 'Dream Pop',
@@ -111,7 +120,7 @@ const DISCOVERY_TRACKS: (SongResult & { shazamCount: string; trendRank: number; 
     title: 'Cosmic Horizons',
     artist: 'Stellar Frequency',
     album: 'Stargazer Suite',
-    artwork: '/src/assets/images/album_cinematic_ambient_1793739284039.jpg',
+    artwork: cinematicAmbientCover,
     previewUrl: 'synth:electronic:cosmic-horizons',
     spotifyId: '9Klm81Sm7Ym9Sajm9Sa',
     genre: 'Electronic',
@@ -125,7 +134,7 @@ const DISCOVERY_TRACKS: (SongResult & { shazamCount: string; trendRank: number; 
     title: 'Acoustic Sanctuary',
     artist: 'Cedar & Pine',
     album: 'Cabin Reverie',
-    artwork: '/src/assets/images/album_indie_dream_pop_1793739284262.jpg',
+    artwork: indieDreamPopCover,
     previewUrl: 'synth:lofi:acoustic-sanctuary',
     spotifyId: '3Ujm76Sm7Ym9Sajm9Sa',
     genre: 'Acoustic',

@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { MicrophoneButton } from '../components/MicrophoneButton';
 import { SongCard } from '../components/SongCard';
 import { addToHistory, toggleFavourite, getHistory } from '../lib/db';
 import { motion, AnimatePresence } from 'framer-motion';
-import { WifiOff, AlertCircle, Compass, History, Sparkles, SearchX } from 'lucide-react';
+import { WifiOff, AlertCircle, Compass, History, Sparkles, SearchX, UploadCloud } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export const Home = ({ isOffline }: { isOffline?: boolean }) => {
@@ -12,6 +12,7 @@ export const Home = ({ isOffline }: { isOffline?: boolean }) => {
   const [error, setError] = useState<string | null>(null);
   const [noMatch, setNoMatch] = useState(false);
   const [recentTracks, setRecentTracks] = useState<any[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     loadRecent();
@@ -30,6 +31,30 @@ export const Home = ({ isOffline }: { isOffline?: boolean }) => {
     setError(null);
     setNoMatch(false);
     setIdentifiedSong(null);
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    handleRecognitionStarted();
+    handleRecognitionFinished(file);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleTestDemoTrack = async () => {
+    handleRecognitionStarted();
+    setIsProcessing(true);
+    try {
+      const res = await fetch('/samples/demo_sample.m4a');
+      if (!res.ok) throw new Error('Demo sample file not found');
+      const blob = await res.blob();
+      await handleRecognitionFinished(blob);
+    } catch (err: any) {
+      setError('Could not run demo track: ' + err.message);
+      setIsProcessing(false);
+    }
   };
 
   const handleRecognitionFinished = async (audioBlob: Blob) => {
@@ -139,12 +164,41 @@ export const Home = ({ isOffline }: { isOffline?: boolean }) => {
                 </p>
               </div>
             ) : (
-              <MicrophoneButton 
-                onRecognitionStarted={handleRecognitionStarted}
-                onRecognitionFinished={handleRecognitionFinished}
-                onCancel={() => setIsProcessing(false)}
-                isProcessing={isProcessing}
-              />
+              <div className="flex flex-col items-center">
+                <MicrophoneButton 
+                  onRecognitionStarted={handleRecognitionStarted}
+                  onRecognitionFinished={handleRecognitionFinished}
+                  onCancel={() => setIsProcessing(false)}
+                  isProcessing={isProcessing}
+                />
+
+                {/* Direct Alternative Options: Upload & Demo Track */}
+                <div className="flex flex-wrap items-center justify-center gap-3 mt-8">
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isProcessing}
+                    className="btn-secondary-glass px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-2 hover:border-[var(--accent-primary)]/40 transition-all text-[var(--text-muted)] hover:text-[var(--text-main)] shadow-sm"
+                  >
+                    <UploadCloud className="w-4 h-4 text-[var(--accent-primary)]" />
+                    <span>Upload Song File</span>
+                  </button>
+                  <button
+                    onClick={handleTestDemoTrack}
+                    disabled={isProcessing}
+                    className="btn-secondary-glass px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-2 hover:border-amber-400/40 transition-all text-[var(--text-muted)] hover:text-[var(--text-main)] shadow-sm"
+                  >
+                    <Sparkles className="w-4 h-4 text-amber-400" />
+                    <span>Test Demo Track</span>
+                  </button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="audio/*,.mp3,.wav,.m4a,.ogg,.flac,.webm,.aac"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                  />
+                </div>
+              </div>
             )
           )}
 
@@ -186,12 +240,21 @@ export const Home = ({ isOffline }: { isOffline?: boolean }) => {
                   </ul>
                 </div>
 
-                <button 
-                  onClick={() => setNoMatch(false)}
-                  className="btn-primary-glass px-8 py-3 rounded-xl font-bold text-xs tracking-wider shadow-lg active:scale-95 text-white"
-                >
-                  Try Again
-                </button>
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                  <button 
+                    onClick={() => setNoMatch(false)}
+                    className="w-full sm:w-auto btn-primary-glass px-7 py-3 rounded-xl font-bold text-xs tracking-wider shadow-lg active:scale-95 text-white"
+                  >
+                    Try Microphone Again
+                  </button>
+                  <button 
+                    onClick={handleTestDemoTrack}
+                    className="w-full sm:w-auto btn-secondary-glass px-6 py-3 rounded-xl font-bold text-xs tracking-wider shadow-sm active:scale-95 text-[var(--text-main)] flex items-center justify-center gap-2 border-[var(--accent-primary)]/30"
+                  >
+                    <Sparkles className="w-4 h-4 text-amber-400" />
+                    <span>Test Demo (Queen)</span>
+                  </button>
+                </div>
               </motion.div>
             )}
 

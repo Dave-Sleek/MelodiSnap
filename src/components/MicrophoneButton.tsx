@@ -350,11 +350,21 @@ export const MicrophoneButton = ({
             </div>
           ) : (
             <p>
-              {isListening 
-                ? (timer < 5 ? 'Keep device near the music for at least 5 seconds...' : 'Song audio captured! Tap stop or let it finish.') 
-                : isProcessing 
-                  ? 'Searching through acoustic fingerprints...' 
-                  : 'Identify any song playing on the radio, TV, or around you.'}
+              {isListening ? (
+                timer > 2 && volumeLevel < 0.03 ? (
+                  <span className="text-amber-400 font-semibold flex items-center justify-center gap-1">
+                    ⚠️ Sound is faint. Move closer to the speaker! ({timer}s)
+                  </span>
+                ) : timer < 5 ? (
+                  `Listening to audio... (${timer}s / 5s minimum)`
+                ) : (
+                  `Audio captured! (${timer}s) · Tap to identify`
+                )
+              ) : isProcessing ? (
+                'Searching through 100M+ acoustic fingerprints...'
+              ) : (
+                'Identify any song playing on the radio, TV, or around you.'
+              )}
             </p>
           )}
         </div>

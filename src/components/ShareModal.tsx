@@ -15,8 +15,13 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, song, onClose })
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
   const [copied, setCopied] = useState<boolean>(false);
   const [isGenerating, setIsGenerating] = useState<boolean>(true);
+  const [imageError, setImageError] = useState<boolean>(false);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const { showToast } = useToast();
+
+  useEffect(() => {
+    setImageError(false);
+  }, [song?.artwork]);
 
   // Compute the best shareable song link
   const shareUrl = React.useMemo(() => {
@@ -159,15 +164,16 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, song, onClose })
           {/* Song Mini Card */}
           <div className="flex items-center gap-3.5 p-3 rounded-2xl bg-[var(--subtle-btn-bg)] border border-[var(--glass-border)] mb-5">
             <div className="relative w-14 h-14 rounded-xl overflow-hidden shrink-0 bg-[var(--card-bg)] border border-white/10 shadow-sm">
-              {song.artwork ? (
+              {song.artwork && !imageError ? (
                 <img
                   src={song.artwork}
                   alt={song.title}
                   className="w-full h-full object-cover"
                   referrerPolicy="no-referrer"
+                  onError={() => setImageError(true)}
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-cyan-400">
+                <div className="w-full h-full flex items-center justify-center text-[var(--accent-primary)]">
                   <Music className="w-6 h-6" />
                 </div>
               )}

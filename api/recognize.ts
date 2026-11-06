@@ -107,15 +107,36 @@ export default async function handler(request: Request) {
         // RIFF -> WAV
         extension = 'wav';
         mime = 'audio/wav';
+      } else if (bytes[0] === 0x49 && bytes[1] === 0x44 && bytes[2] === 0x33) {
+        // ID3 -> MP3
+        extension = 'mp3';
+        mime = 'audio/mpeg';
+      } else if (bytes[0] === 0xff && (bytes[1] & 0xe0) === 0xe0) {
+        // MPEG frame sync -> MP3
+        extension = 'mp3';
+        mime = 'audio/mpeg';
+      } else if (bytes[0] === 0x66 && bytes[1] === 0x4c && bytes[2] === 0x61 && bytes[3] === 0x43) {
+        // fLaC
+        extension = 'flac';
+        mime = 'audio/flac';
+      } else if (audioEntry.type?.includes('mp3') || audioEntry.type?.includes('mpeg')) {
+        extension = 'mp3';
+        mime = 'audio/mpeg';
+      } else if (audioEntry.type?.includes('mp4') || audioEntry.type?.includes('m4a') || audioEntry.type?.includes('aac')) {
+        extension = 'm4a';
+        mime = 'audio/mp4';
+      } else if (audioEntry.type?.includes('flac')) {
+        extension = 'flac';
+        mime = 'audio/flac';
+      } else if (audioEntry.type?.includes('wav')) {
+        extension = 'wav';
+        mime = 'audio/wav';
       } else if (audioEntry.type?.includes('webm')) {
         extension = 'webm';
         mime = 'audio/webm';
       } else if (audioEntry.type?.includes('ogg')) {
         extension = 'ogg';
         mime = 'audio/ogg';
-      } else if (audioEntry.type?.includes('mp4')) {
-        extension = 'mp4';
-        mime = 'audio/mp4';
       }
     }
 

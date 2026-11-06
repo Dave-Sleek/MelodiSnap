@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Play, Pause, X, Music, ExternalLink, Share2 } from 'lucide-react';
 import { useAudioPlayer } from '../context/AudioPlayerContext';
@@ -7,6 +7,11 @@ import { useShareModal } from '../context/ShareModalContext';
 export const AudioPlayerBar = () => {
   const { currentTrack, isPlaying, isLoading, progress, currentTime, duration, togglePlay, seekTrack, closePlayer } = useAudioPlayer();
   const { openShareModal } = useShareModal();
+  const [imageError, setImageError] = useState(false);
+
+  useEffect(() => {
+    setImageError(false);
+  }, [currentTrack?.artwork]);
 
   if (!currentTrack) return null;
 
@@ -63,12 +68,13 @@ export const AudioPlayerBar = () => {
             {/* Song Info */}
             <div className="flex items-center gap-3 min-w-0 flex-1">
               <div className="relative w-11 h-11 rounded-xl overflow-hidden shrink-0 bg-[var(--subtle-btn-bg)] border border-[var(--glass-border)] shadow-sm">
-                {currentTrack.artwork ? (
+                {currentTrack.artwork && !imageError ? (
                   <img 
                     src={currentTrack.artwork} 
                     alt={currentTrack.title} 
                     className={`w-full h-full object-cover transition-transform duration-700 ${isPlaying ? 'scale-105' : ''}`}
                     referrerPolicy="no-referrer"
+                    onError={() => setImageError(true)}
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-[var(--accent-primary)]">

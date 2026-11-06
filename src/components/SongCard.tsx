@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Play, Pause, Share2, Heart, Music, Check } from 'lucide-react';
 import { useAudioPlayer } from '../context/AudioPlayerContext';
@@ -40,6 +40,7 @@ export const SongCard = ({
   const isCurrentTrack = Boolean(song.previewUrl && currentTrack?.previewUrl === song.previewUrl);
   const isCurrentTrackPlaying = isCurrentTrack && isPlaying;
   const isCurrentTrackLoading = isCurrentTrack && isLoading;
+  const [imageError, setImageError] = useState(false);
 
   const handlePlayToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -91,12 +92,13 @@ export const SongCard = ({
         <div className="flex flex-col sm:flex-row gap-8 items-center relative z-10">
           {/* Artwork Container */}
           <div className="relative w-48 h-48 sm:w-56 sm:h-56 rounded-2xl overflow-hidden shrink-0 shadow-2xl border border-white/10 dark:border-white/10 group">
-            {song.artwork ? (
+            {song.artwork && !imageError ? (
               <img 
                 src={song.artwork} 
                 alt={song.title} 
                 className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                 referrerPolicy="no-referrer"
+                onError={() => setImageError(true)}
               />
             ) : (
               <div className="w-full h-full bg-gradient-to-br from-[var(--bg-secondary)] via-slate-900 to-slate-950 flex items-center justify-center text-[var(--accent-primary)]">
@@ -230,12 +232,13 @@ export const SongCard = ({
           )}
 
           <div className="relative w-12 h-12 rounded-xl overflow-hidden shrink-0 bg-[var(--subtle-btn-bg)] border border-[var(--glass-border)]">
-            {song.artwork ? (
+            {song.artwork && !imageError ? (
               <img 
                 src={song.artwork} 
                 alt={song.title} 
                 className="w-full h-full object-cover"
                 referrerPolicy="no-referrer"
+                onError={() => setImageError(true)}
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-[var(--accent-primary)]">
@@ -334,12 +337,13 @@ export const SongCard = ({
       <div>
         {/* Artwork with interactive glass play overlay */}
         <div className="relative aspect-square w-full rounded-xl overflow-hidden mb-3.5 bg-[var(--subtle-btn-bg)] border border-[var(--glass-border)] shadow-sm">
-          {song.artwork ? (
+          {song.artwork && !imageError ? (
             <img 
               src={song.artwork} 
               alt={song.title} 
               className="w-full h-full object-cover transition-transform duration-600 ease-out group-hover:scale-105"
               referrerPolicy="no-referrer"
+              onError={() => setImageError(true)}
             />
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-slate-100 via-slate-50 to-white dark:from-slate-900 dark:via-slate-950 dark:to-black flex items-center justify-center text-[var(--accent-primary)]/40">

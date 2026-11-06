@@ -93,15 +93,30 @@ apiRouter.post('/recognize', upload.single('audio'), async (req, res) => {
       } else if (req.file.buffer.slice(0, 4).toString('ascii') === 'RIFF') {
         extension = 'wav';
         mime = 'audio/wav';
+      } else if (req.file.buffer.slice(0, 3).toString('ascii') === 'ID3' || (req.file.buffer[0] === 0xff && (req.file.buffer[1] & 0xe0) === 0xe0)) {
+        extension = 'mp3';
+        mime = 'audio/mpeg';
+      } else if (req.file.buffer.slice(0, 4).toString('ascii') === 'fLaC') {
+        extension = 'flac';
+        mime = 'audio/flac';
+      } else if (req.file.mimetype?.includes('mp3') || req.file.mimetype?.includes('mpeg')) {
+        extension = 'mp3';
+        mime = 'audio/mpeg';
+      } else if (req.file.mimetype?.includes('mp4') || req.file.mimetype?.includes('m4a') || req.file.mimetype?.includes('aac')) {
+        extension = 'm4a';
+        mime = 'audio/mp4';
+      } else if (req.file.mimetype?.includes('flac')) {
+        extension = 'flac';
+        mime = 'audio/flac';
+      } else if (req.file.mimetype?.includes('wav')) {
+        extension = 'wav';
+        mime = 'audio/wav';
       } else if (req.file.mimetype?.includes('webm')) {
         extension = 'webm';
         mime = 'audio/webm';
       } else if (req.file.mimetype?.includes('ogg')) {
         extension = 'ogg';
         mime = 'audio/ogg';
-      } else if (req.file.mimetype?.includes('mp4')) {
-        extension = 'mp4';
-        mime = 'audio/mp4';
       }
     }
 
