@@ -1,10 +1,33 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
-import { Mic, Compass, History, Heart, Globe, Moon, Sun } from 'lucide-react';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { Mic, Compass, History, Heart, Globe, Moon, Sun, Loader2 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
+import { useIdentification } from '../context/IdentificationContext';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export const Navbar = () => {
   const { theme, toggleTheme } = useTheme();
+  const { isListening, isProcessing, startIdentification, stopIdentification, identifiedSong } = useIdentification();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleIdentifyClick = () => {
+    if (isListening) {
+      stopIdentification();
+    } else if (!isProcessing) {
+      startIdentification();
+      // If we're not on home, we might want to stay here while listening,
+      // but the requirement says "display result using existing interface" which is Home.
+      // We'll navigate to home once a song is identified, or stay here and show a global indicator.
+    }
+  };
+
+  // Automatically navigate to Home when a song is identified if not already there
+  React.useEffect(() => {
+    if (identifiedSong && location.pathname !== '/') {
+      navigate('/');
+    }
+  }, [identifiedSong, navigate, location.pathname]);
 
   return (
     <>
@@ -46,21 +69,30 @@ export const Navbar = () => {
           </NavLink>
 
           {/* Centered Primary Action Button on Desktop - Circular with prominence */}
-          <div className="flex flex-col items-center justify-center px-2">
-            <NavLink
-              to="/"
-              end
-              className={({ isActive }) =>
-                `w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 active:scale-95 shadow-lg border-2 ${
-                  isActive
-                    ? 'bg-[var(--accent-primary)] text-white border-transparent shadow-[0_0_20px_rgba(0,122,255,0.4)] scale-110'
-                    : 'bg-[var(--accent-primary)]/15 text-[var(--accent-primary)] border-[var(--accent-primary)]/20 hover:bg-[var(--accent-primary)] hover:text-white hover:scale-105'
-                }`
-              }
-              title="Identify Music"
+          <div className="flex flex-col items-center justify-center px-4">
+            <button
+              onClick={handleIdentifyClick}
+              disabled={isProcessing}
+              className={`group relative w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 active:scale-95 shadow-lg border-2 ${
+                isListening
+                  ? 'bg-[var(--accent-primary)] text-white border-transparent shadow-[0_0_20px_rgba(0,122,255,0.5)] scale-110'
+                  : isProcessing
+                  ? 'bg-[var(--subtle-btn-bg)] text-[var(--text-muted)] border-[var(--glass-border)] cursor-not-allowed'
+                  : location.pathname === '/'
+                  ? 'bg-[var(--accent-primary)] text-white border-transparent shadow-[0_0_20px_rgba(0,122,255,0.4)] scale-110'
+                  : 'bg-[var(--accent-primary)]/15 text-[var(--accent-primary)] border-[var(--accent-primary)]/20 hover:bg-[var(--accent-primary)] hover:text-white hover:scale-105'
+              }`}
+              title={isListening ? "Stop Listening" : isProcessing ? "Processing..." : "Identify Music"}
             >
-              <Mic className="w-5 h-5 fill-current" />
-            </NavLink>
+              {isListening && (
+                <span className="absolute inset-0 rounded-full bg-[var(--accent-primary)] animate-ping opacity-20" />
+              )}
+              {isProcessing ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <Mic className={`w-5 h-5 ${isListening ? 'fill-current' : ''}`} />
+              )}
+            </button>
           </div>
 
           <NavLink
@@ -120,7 +152,7 @@ export const Navbar = () => {
       </div>
 
       {/* Mobile Bottom Tab Bar (TikTok / YouTube / Shazam style centered primary button) */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 md:hidden glass border-t border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-2xl">
+      <nav className="fixed bottom-0 left-0 right-0 z-40 md:hidden glass border-t border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-2xl pb-safe">
         <div className="grid grid-cols-5 items-center h-16 px-1 relative">
           {/* 1. Discover */}
           <MobileNavItem to="/discover" icon={<Compass />} label="Discover" />
@@ -131,24 +163,39 @@ export const Navbar = () => {
           {/* 3. Centered Primary Circled Identify Button (Raised, Glowing, Elevated) */}
           <div className="flex flex-col items-center justify-center -translate-y-4 z-10 relative">
             {/* Animated Ambient Outer Glow */}
-            <div className="absolute inset-0 w-16 h-16 bg-[var(--accent-primary)] rounded-full blur-xl opacity-20 animate-pulse pointer-events-none" />
+            <AnimatePresence>
+              {(isListening || isProcessing || location.pathname === '/') && (
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 0.3, scale: 1.2 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  className={`absolute inset-0 w-16 h-16 rounded-full blur-xl pointer-events-none bg-[var(--accent-primary)]`} 
+                />
+              )}
+            </AnimatePresence>
             
-            <NavLink
-              to="/"
-              end
-              className={({ isActive }) =>
-                `w-15 h-15 rounded-full flex items-center justify-center transition-all duration-300 active:scale-90 shadow-2xl border-[5px] border-[var(--bg-primary)] ${
-                  isActive
-                    ? 'bg-[var(--accent-primary)] text-white shadow-[0_0_30px_rgba(0,122,255,0.7)] scale-110'
-                    : 'bg-[var(--accent-primary)] text-white shadow-[0_8px_20px_rgba(0,122,255,0.4)] hover:scale-110'
-                }`
-              }
-              aria-label="Identify music"
+            <button
+              onClick={handleIdentifyClick}
+              disabled={isProcessing}
+              className={`w-15 h-15 rounded-full flex items-center justify-center transition-all duration-300 active:scale-90 shadow-2xl border-[5px] border-[var(--bg-primary)] ${
+                isListening
+                  ? 'bg-[var(--accent-primary)] text-white shadow-[0_0_30px_rgba(0,122,255,0.7)] scale-110'
+                  : isProcessing
+                  ? 'bg-[var(--subtle-btn-bg)] text-[var(--text-muted)] shadow-none scale-95'
+                  : location.pathname === '/'
+                  ? 'bg-[var(--accent-primary)] text-white shadow-[0_0_30px_rgba(0,122,255,0.7)] scale-110'
+                  : 'bg-[var(--accent-primary)] text-white shadow-[0_8px_20px_rgba(0,122,255,0.4)] hover:scale-110'
+              }`}
+              aria-label={isListening ? "Stop identifying" : "Identify music"}
             >
-              <Mic className="w-6.5 h-6.5 text-white fill-current" />
-            </NavLink>
-            <span className="text-[10px] font-bold tracking-tight text-[var(--accent-primary)] mt-1.5 bg-[var(--bg-primary)] px-2 py-0.5 rounded-full shadow-sm border border-[var(--glass-border)]">
-              Identify
+              {isProcessing ? (
+                <Loader2 className="w-7 h-7 animate-spin" />
+              ) : (
+                <Mic className={`w-6.5 h-6.5 text-white ${isListening ? 'fill-current' : ''}`} />
+              )}
+            </button>
+            <span className={`text-[10px] font-bold tracking-tight mt-1.5 bg-[var(--bg-primary)] px-2 py-0.5 rounded-full shadow-sm border border-[var(--glass-border)] text-[var(--accent-primary)]`}>
+              {isListening ? 'Listening' : isProcessing ? 'Processing' : 'Identify'}
             </span>
           </div>
 
@@ -177,3 +224,4 @@ const MobileNavItem = ({ to, icon, label, end }: { to: string; icon: React.React
     <span className="text-[10px] tracking-tight mt-0.5">{label}</span>
   </NavLink>
 );
+

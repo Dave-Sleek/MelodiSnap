@@ -226,7 +226,7 @@ export const SongCard = ({
                   onClick={onToggleFavourite}
                   className={`p-3 rounded-xl btn-secondary-glass transition-all ${
                     song.isFavourite
-                      ? 'bg-rose-500/10 text-rose-500 border-rose-500/20 shadow-[0_0_15px_rgba(244,63,94,0.15)]'
+                      ? 'bg-[var(--accent-primary)]/10 text-[var(--accent-primary)] border-[var(--accent-primary)]/20 shadow-[0_0_15px_rgba(0,122,255,0.15)]'
                       : 'text-[var(--text-main)]'
                   }`}
                   title={song.isFavourite ? 'Remove from Favourites' : 'Add to Favourites'}
@@ -358,7 +358,7 @@ export const SongCard = ({
               onClick={onToggleFavourite}
               className={`p-2.5 rounded-xl btn-secondary-glass transition-colors ${
                 song.isFavourite
-                  ? 'text-rose-500 bg-rose-500/10'
+                  ? 'text-[var(--accent-primary)] bg-[var(--accent-primary)]/10'
                   : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'
               }`}
               title={song.isFavourite ? 'Favourited' : 'Add to favourites'}
@@ -495,7 +495,7 @@ export const SongCard = ({
               onClick={onToggleFavourite}
               className={`p-2 rounded-xl btn-secondary-glass transition-colors ${
                 song.isFavourite
-                  ? 'text-rose-500 bg-rose-500/10 border-rose-500/20'
+                  ? 'text-[var(--accent-primary)] bg-[var(--accent-primary)]/10 border-[var(--accent-primary)]/20'
                   : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'
               }`}
               title={song.isFavourite ? 'Favourited' : 'Add to favourites'}

@@ -87,7 +87,7 @@ export const Callback = () => {
           )}
 
           {status === 'error' && (
-            <div className="w-20 h-20 rounded-3xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-400 shadow-xl shadow-rose-500/10">
+            <div className="w-20 h-20 rounded-3xl bg-[var(--accent-primary)]/15 border border-[var(--accent-primary)]/30 flex items-center justify-center text-[var(--accent-primary)] shadow-xl shadow-[var(--accent-primary)]/10">
               <AlertCircle className="w-10 h-10" />
             </div>
           )}
@@ -119,7 +119,7 @@ export const Callback = () => {
         {status === 'error' && (
           <div className="space-y-5">
             <div>
-              <h2 className="text-2xl font-black text-rose-400 tracking-tight">
+              <h2 className="text-2xl font-black text-[var(--accent-primary)] tracking-tight">
                 Connection Failed
               </h2>
               <p className="text-xs text-[var(--text-muted)] mt-2 leading-relaxed">
