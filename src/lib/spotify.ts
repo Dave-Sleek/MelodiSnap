@@ -1,9 +1,39 @@
 /**
  * Spotify OAuth 2.0 with PKCE
+ * Uses SPOTIFY_CLIENT_ID (without VITE_ prefix)
  */
 
-const CLIENT_ID = import.meta.env.VITE_SPOTIFY_CLIENT_ID;
-const REDIRECT_URI = `${window.location.origin}/callback/spotify`;
+export const getSpotifyRedirectUri = () => {
+  return `${window.location.origin}/callback`;
+};
+
+// Fetches SPOTIFY_CLIENT_ID from build environment or runtime edge/server endpoint
+export const getSpotifyClientId = async (): Promise<string> => {
+  // 1. Direct from build-time / Vite environment
+  const envId = (import.meta as any).env?.SPOTIFY_CLIENT_ID || (process as any).env?.SPOTIFY_CLIENT_ID;
+  if (envId) return envId;
+
+  // 2. Check cached in localStorage
+  const cached = localStorage.getItem('spotify_client_id_cached');
+  if (cached) return cached;
+
+  // 3. Runtime fetch from /api/spotify-config (serves Vercel/Node runtime process.env.SPOTIFY_CLIENT_ID)
+  try {
+    const res = await fetch('/api/spotify-config');
+    if (res.ok) {
+      const data = await res.json();
+      if (data.clientId) {
+        localStorage.setItem('spotify_client_id_cached', data.clientId);
+        return data.clientId;
+      }
+    }
+  } catch {
+    // fallback
+  }
+
+  return '';
+};
+
 const SCOPES = [
   'user-library-modify',
   'user-library-read',
@@ -32,15 +62,22 @@ export const generateCodeChallenge = async (codeVerifier: string) => {
 };
 
 export const loginWithSpotify = async () => {
+  const clientId = await getSpotifyClientId();
+  if (!clientId) {
+    throw new Error('Spotify Client ID is not set. Please set SPOTIFY_CLIENT_ID in your environment variables.');
+  }
+
   const codeVerifier = generateCodeVerifier(128);
   const codeChallenge = await generateCodeChallenge(codeVerifier);
+  const redirectUri = getSpotifyRedirectUri();
   
   localStorage.setItem('spotify_code_verifier', codeVerifier);
+  localStorage.setItem('spotify_redirect_uri', redirectUri);
 
   const params = new URLSearchParams({
-    client_id: CLIENT_ID,
+    client_id: clientId,
     response_type: 'code',
-    redirect_uri: REDIRECT_URI,
+    redirect_uri: redirectUri,
     code_challenge_method: 'S256',
     code_challenge: codeChallenge,
     scope: SCOPES.join(' '),
@@ -50,14 +87,20 @@ export const loginWithSpotify = async () => {
 };
 
 export const getSpotifyToken = async (code: string) => {
+  const clientId = await getSpotifyClientId();
   const codeVerifier = localStorage.getItem('spotify_code_verifier');
+  const redirectUri = localStorage.getItem('spotify_redirect_uri') || getSpotifyRedirectUri();
+
+  if (!clientId) {
+    throw new Error('Spotify Client ID is missing. Please set SPOTIFY_CLIENT_ID in your environment.');
+  }
 
   const params = new URLSearchParams({
-    client_id: CLIENT_ID,
+    client_id: clientId,
     grant_type: 'authorization_code',
     code,
-    redirect_uri: REDIRECT_URI,
-    code_verifier: codeVerifier!,
+    redirect_uri: redirectUri,
+    code_verifier: codeVerifier || '',
   });
 
   const response = await fetch('https://accounts.spotify.com/api/token', {
@@ -69,20 +112,28 @@ export const getSpotifyToken = async (code: string) => {
   });
 
   const data = await response.json();
+  if (data.error) {
+    throw new Error(data.error_description || data.error);
+  }
+
   if (data.access_token) {
     localStorage.setItem('spotify_access_token', data.access_token);
-    localStorage.setItem('spotify_refresh_token', data.refresh_token);
+    if (data.refresh_token) {
+      localStorage.setItem('spotify_refresh_token', data.refresh_token);
+    }
     localStorage.setItem('spotify_token_expiry', (Date.now() + data.expires_in * 1000).toString());
+    localStorage.removeItem('spotify_code_verifier');
   }
   return data;
 };
 
 export const refreshSpotifyToken = async () => {
+  const clientId = await getSpotifyClientId();
   const refreshToken = localStorage.getItem('spotify_refresh_token');
-  if (!refreshToken) return null;
+  if (!refreshToken || !clientId) return null;
 
   const params = new URLSearchParams({
-    client_id: CLIENT_ID,
+    client_id: clientId,
     grant_type: 'refresh_token',
     refresh_token: refreshToken,
   });

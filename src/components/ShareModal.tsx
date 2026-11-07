@@ -29,9 +29,6 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, song, onClose })
     if (song.spotifyId) {
       return `https://open.spotify.com/track/${song.spotifyId}`;
     }
-    if (song.appleMusicId) {
-      return `https://music.apple.com/song/${song.appleMusicId}`;
-    }
     // Search fallback link on Spotify
     return `https://open.spotify.com/search/${encodeURIComponent(`${song.title} ${song.artist}`)}`;
   }, [song]);

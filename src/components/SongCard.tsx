@@ -206,15 +206,6 @@ export const SongCard = ({
                 <span>Spotify</span>
               </button>
 
-              {song.appleMusicId && (
-                <button
-                  onClick={() => window.open(`https://music.apple.com/song/${song.appleMusicId}`, '_blank')}
-                  className="px-4 py-3 rounded-xl bg-[#FA2D55] hover:bg-[#FA2D55]/90 text-white force-white font-bold text-xs tracking-wide flex items-center gap-2 shadow-lg shadow-[#FA2D55]/20 transition-all hover:-translate-y-0.5 active:translate-y-0"
-                >
-                  <Music className="w-3.5 h-3.5 text-white force-white" />
-                  <span className="text-white force-white">Apple Music</span>
-                </button>
-              )}
             </div>
           </div>
         </div>
@@ -443,15 +434,6 @@ export const SongCard = ({
             <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.5 17.3c-.2.3-.6.4-.9.2-2.8-1.7-6.2-2.1-10.3-1.1-.3.1-.7-.1-.8-.4-.1-.3.1-.7.4-.8 4.5-1 8.3-.6 11.4 1.2.3.2.4.6.2.9zm1.5-3.3c-.3.4-.8.5-1.2.3-3.2-1.9-8-2.5-11.8-1.3-.5.1-1-.2-1.1-.7s.2-1 .7-1.1c4.4-1.3 9.7-.7 13.5 1.6.4.2.5.8.2 1.2zm.1-3.4C15.2 8.3 8.7 8.1 4.9 9.3c-.6.2-1.3-.2-1.5-.8-.2-.6.2-1.3.8-1.5 4.5-1.4 11.7-1.1 16.5 1.7.6.3.8 1.1.4 1.7-.3.5-1.1.7-1.7.4z"/></svg>
           </button>
 
-          {song.appleMusicId && (
-            <button
-              onClick={() => window.open(`https://music.apple.com/song/${song.appleMusicId}`, '_blank')}
-              className="p-2 text-[#FA2D55] hover:bg-[#FA2D55]/10 rounded-xl transition-colors"
-              title="Listen on Apple Music"
-            >
-              <Music className="w-4 h-4" />
-            </button>
-          )}
         </div>
       </div>
     </motion.div>

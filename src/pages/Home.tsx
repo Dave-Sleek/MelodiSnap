@@ -359,7 +359,7 @@ export const Home = ({ isOffline }: { isOffline?: boolean }) => {
                   <span>Sync & QR Sharing</span>
                 </h4>
                 <p className="text-xs text-[var(--text-muted)] leading-relaxed">
-                  Open identified songs directly on Spotify or Apple Music, or generate dynamic QR codes to share in person.
+                  Open identified songs directly on Spotify, or generate dynamic QR codes to share instantly in person.
                 </p>
               </div>
             </section>

@@ -47,9 +47,15 @@ apiRouter.get('/health', (req, res) => {
     status: 'ok', 
     config: {
       audd: !!process.env.AUDD_API_TOKEN,
-      spotify: !!process.env.VITE_SPOTIFY_CLIENT_ID,
-      apple: !!process.env.APPLE_TEAM_ID && !!process.env.APPLE_KEY_ID
+      spotify: !!(process.env.SPOTIFY_CLIENT_ID || process.env.VITE_SPOTIFY_CLIENT_ID),
     }
+  });
+});
+
+// Spotify Public Client ID endpoint for runtime client fetching
+apiRouter.get('/spotify-config', (req, res) => {
+  res.json({
+    clientId: process.env.SPOTIFY_CLIENT_ID || process.env.VITE_SPOTIFY_CLIENT_ID || '',
   });
 });
 
@@ -173,28 +179,6 @@ apiRouter.get('/music/spotify/search', async (req, res) => {
   }
 });
 
-// Apple Music Token Generator
-apiRouter.get('/apple/developer-token', (req, res) => {
-  const teamId = process.env.APPLE_TEAM_ID;
-  const keyId = process.env.APPLE_KEY_ID;
-  const privateKey = process.env.APPLE_PRIVATE_KEY?.replace(/\\n/g, '\n');
-
-  if (!teamId || !keyId || !privateKey) {
-    return res.status(503).json({ error: 'Apple Music credentials missing.' });
-  }
-
-  try {
-    const token = jwt.sign({}, privateKey, {
-      algorithm: 'ES256',
-      expiresIn: '180d',
-      issuer: teamId,
-      header: { alg: 'ES256', kid: keyId },
-    });
-    res.json({ token });
-  } catch (error: any) {
-    res.status(500).json({ error: 'Failed to generate developer token' });
-  }
-});
 
 /**
  * MOUNT API ROUTER

@@ -7,6 +7,7 @@ import { Discover } from './pages/Discover';
 import { History } from './pages/History';
 import { Favourites } from './pages/Favourites';
 import { Connect } from './pages/Connect';
+import { Callback } from './pages/Callback';
 import { WifiOff } from 'lucide-react';
 import { ThemeProvider } from './context/ThemeContext';
 import { ToastProvider } from './context/ToastContext';
@@ -63,7 +64,8 @@ export default function App() {
                     <Route path="/history" element={<History />} />
                     <Route path="/favourites" element={<Favourites />} />
                     <Route path="/connect" element={<Connect />} />
-                    <Route path="/callback/spotify" element={<Connect />} />
+                    <Route path="/callback" element={<Callback />} />
+                    <Route path="/callback/spotify" element={<Callback />} />
                   </Routes>
                 </main>
 

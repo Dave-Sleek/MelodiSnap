@@ -22,8 +22,7 @@ export default async function handler(request: Request) {
       runtime: 'vercel-edge',
       config: {
         audd: !!process.env.AUDD_API_TOKEN,
-        spotify: !!process.env.VITE_SPOTIFY_CLIENT_ID,
-        apple: !!process.env.APPLE_TEAM_ID && !!process.env.APPLE_KEY_ID,
+        spotify: !!(process.env.SPOTIFY_CLIENT_ID || process.env.VITE_SPOTIFY_CLIENT_ID),
       },
     }),
     {
