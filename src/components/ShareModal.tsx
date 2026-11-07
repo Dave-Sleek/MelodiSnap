@@ -138,14 +138,14 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, song, onClose })
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.94, y: 16 }}
           transition={{ type: 'spring', damping: 26, stiffness: 320 }}
-          className="relative w-full max-w-md glass-card rounded-3xl p-6 sm:p-7 shadow-2xl border border-cyan-500/30 overflow-hidden z-10"
+          className="relative w-full max-w-md glass-card rounded-3xl p-6 sm:p-7 shadow-2xl border border-[var(--glass-border)] overflow-hidden z-10"
         >
           {/* Subtle top edge light line */}
-          <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent pointer-events-none" />
+          <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-gradient-to-r from-transparent via-[var(--accent-primary)]/40 to-transparent pointer-events-none" />
 
           {/* Modal Header */}
           <div className="flex items-center justify-between mb-5">
-            <div className="flex items-center gap-2 text-cyan-400 text-xs font-bold uppercase tracking-wider">
+            <div className="flex items-center gap-2 text-[var(--accent-primary)] text-xs font-bold uppercase tracking-wider">
               <QrCode className="w-4 h-4" />
               <span>Share In Person</span>
             </div>
@@ -160,7 +160,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, song, onClose })
 
           {/* Song Mini Card */}
           <div className="flex items-center gap-3.5 p-3 rounded-2xl bg-[var(--subtle-btn-bg)] border border-[var(--glass-border)] mb-5">
-            <div className="relative w-14 h-14 rounded-xl overflow-hidden shrink-0 bg-[var(--card-bg)] border border-white/10 shadow-sm">
+            <div className="relative w-14 h-14 rounded-xl overflow-hidden shrink-0 bg-[var(--card-bg)] border border-[var(--glass-border)] shadow-sm">
               {song.artwork && !imageError ? (
                 <img
                   src={song.artwork}
@@ -191,12 +191,12 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, song, onClose })
           </div>
 
           {/* Styled Dynamic QR Code Container */}
-          <div className="flex flex-col items-center justify-center p-5 rounded-2xl bg-gradient-to-b from-cyan-950/20 to-black/30 border border-cyan-500/20 mb-5 relative group">
-            <div className="relative p-3.5 rounded-2xl bg-white shadow-xl shadow-cyan-500/10 border-2 border-cyan-400/40">
+          <div className="flex flex-col items-center justify-center p-5 rounded-2xl bg-[var(--subtle-btn-bg)] border border-[var(--glass-border)] mb-5 relative group">
+            <div className="relative p-3.5 rounded-2xl bg-white shadow-xl border border-[var(--glass-border)]">
               {isGenerating ? (
                 <div className="w-48 h-48 sm:w-52 sm:h-52 flex flex-col items-center justify-center gap-2">
-                  <span className="w-8 h-8 border-3 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin" />
-                  <span className="text-[11px] font-semibold text-slate-600">Generating QR...</span>
+                  <span className="w-8 h-8 border-3 border-[var(--accent-primary)]/30 border-t-[var(--accent-primary)] rounded-full animate-spin" />
+                  <span className="text-[11px] font-semibold text-[var(--text-muted)]">Generating QR...</span>
                 </div>
               ) : qrDataUrl ? (
                 <img
@@ -205,15 +205,15 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, song, onClose })
                   className="w-48 h-48 sm:w-52 sm:h-52 rounded-lg object-contain block select-none"
                 />
               ) : (
-                <div className="w-48 h-48 flex items-center justify-center text-xs text-red-500">
+                <div className="w-48 h-48 flex items-center justify-center text-xs text-[var(--text-muted)]">
                   Unable to render QR
                 </div>
               )}
             </div>
 
             {/* In-Person Mobile Camera Guidance */}
-            <div className="flex items-center gap-2 text-xs text-cyan-300 font-medium mt-3.5 text-center">
-              <Smartphone className="w-4 h-4 shrink-0 text-cyan-400 animate-pulse" />
+            <div className="flex items-center gap-2 text-xs text-[var(--text-sub)] font-medium mt-3.5 text-center">
+              <Smartphone className="w-4 h-4 shrink-0 text-[var(--accent-primary)]" />
               <span>Scan with any smartphone camera to listen</span>
             </div>
           </div>
@@ -224,16 +224,16 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, song, onClose })
               {/* Copy Link Button */}
               <button
                 onClick={handleCopyLink}
-                className="btn-secondary-glass py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 hover:border-cyan-400 transition-all"
+                className="btn-secondary-glass py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 hover:border-[var(--accent-primary)] transition-all"
               >
                 {copied ? (
                   <>
-                    <Check className="w-4 h-4 text-emerald-400" />
-                    <span className="text-emerald-400">Copied!</span>
+                    <Check className="w-4 h-4 text-emerald-500" />
+                    <span className="text-emerald-500 font-bold">Copied!</span>
                   </>
                 ) : (
                   <>
-                    <Copy className="w-4 h-4 text-cyan-400" />
+                    <Copy className="w-4 h-4 text-[var(--accent-primary)]" />
                     <span>Copy Link</span>
                   </>
                 )}
@@ -243,9 +243,9 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, song, onClose })
               <button
                 onClick={handleDownloadQR}
                 disabled={isGenerating || !qrDataUrl}
-                className="btn-secondary-glass py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 hover:border-cyan-400 transition-all disabled:opacity-50"
+                className="btn-secondary-glass py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 hover:border-[var(--accent-primary)] transition-all disabled:opacity-50"
               >
-                <Download className="w-4 h-4 text-cyan-400" />
+                <Download className="w-4 h-4 text-[var(--accent-primary)]" />
                 <span>Save QR Code</span>
               </button>
             </div>

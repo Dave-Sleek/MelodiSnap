@@ -1,12 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MicrophoneButton } from '../components/MicrophoneButton';
 import { SongCard } from '../components/SongCard';
+import { CanvasMusicVisualizer } from '../components/CanvasMusicVisualizer';
 import { addToHistory, toggleFavourite, getHistory } from '../lib/db';
 import { motion, AnimatePresence } from 'framer-motion';
 import { WifiOff, AlertCircle, Compass, History, Sparkles, SearchX, UploadCloud } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useAudioPlayer } from '../context/AudioPlayerContext';
 
 export const Home = ({ isOffline }: { isOffline?: boolean }) => {
+  const { currentTrack, isPlaying } = useAudioPlayer();
   const [isProcessing, setIsProcessing] = useState(false);
   const [identifiedSong, setIdentifiedSong] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
@@ -152,6 +155,32 @@ export const Home = ({ isOffline }: { isOffline?: boolean }) => {
         )}
 
         <main className="flex flex-col items-center">
+          {/* Real-time Canvas Music Visualizer appearing in center of main display area */}
+          <AnimatePresence>
+            {isPlaying && !identifiedSong && currentTrack && (
+              <motion.div
+                initial={{ opacity: 0, y: -16, scale: 0.96 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -16, scale: 0.96 }}
+                transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                className="w-full max-w-2xl mb-8"
+              >
+                <div className="flex items-center justify-between mb-2.5 px-2">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-[var(--accent-primary)] animate-pulse shadow-[0_0_8px_rgba(0,122,255,0.7)]" />
+                    <span className="text-xs font-bold text-[var(--accent-primary)] uppercase tracking-wider truncate max-w-[200px] sm:max-w-xs">
+                      {currentTrack.title}
+                    </span>
+                  </div>
+                  <span className="text-xs text-[var(--text-muted)] font-medium truncate max-w-[150px]">
+                    {currentTrack.artist}
+                  </span>
+                </div>
+                <CanvasMusicVisualizer height={125} variant="hero" />
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {!identifiedSong && !error && !noMatch && (
             isOffline ? (
               <div className="text-center space-y-4 py-12">

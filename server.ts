@@ -64,6 +64,110 @@ apiRouter.get('/test', (req, res) => {
   res.json({ message: 'API Router is successfully receiving requests' });
 });
 
+// Real-Time Lyrics Endpoint (LRCLIB + AudD Fallback)
+apiRouter.get('/lyrics', async (req, res) => {
+  const { title, artist, album, duration } = req.query;
+
+  if (!title || !artist) {
+    return res.status(400).json({ error: 'Title and artist query parameters are required.' });
+  }
+
+  const cleanTitle = String(title).trim().replace(/\s*\(.*?\)\s*/g, ' ').replace(/\s*\[.*?\]\s*/g, ' ').trim();
+  const cleanArtist = String(artist).trim();
+
+  try {
+    // 1. Direct match query on LRCLIB
+    try {
+      const lrclibRes = await axios.get('https://lrclib.net/api/get', {
+        params: {
+          artist_name: cleanArtist,
+          track_name: cleanTitle,
+          album_name: album ? String(album).trim() : undefined,
+          duration: duration ? Number(duration) : undefined,
+        },
+        timeout: 6000,
+        headers: { 'User-Agent': 'melodisnap/1.0 (https://melodisnap.vercel.app)' },
+      });
+
+      if (lrclibRes.data && (lrclibRes.data.syncedLyrics || lrclibRes.data.plainLyrics)) {
+        return res.json({
+          status: 'success',
+          source: 'lrclib',
+          title: lrclibRes.data.trackName || title,
+          artist: lrclibRes.data.artistName || artist,
+          syncedLyrics: lrclibRes.data.syncedLyrics || null,
+          plainLyrics: lrclibRes.data.plainLyrics || null,
+          instrumental: Boolean(lrclibRes.data.instrumental),
+        });
+      }
+    } catch {
+      // Proceed to fallback search
+    }
+
+    // 2. Fuzzy search query on LRCLIB
+    try {
+      const searchRes = await axios.get('https://lrclib.net/api/search', {
+        params: { q: `${cleanTitle} ${cleanArtist}` },
+        timeout: 6000,
+        headers: { 'User-Agent': 'melodisnap/1.0 (https://melodisnap.vercel.app)' },
+      });
+
+      if (Array.isArray(searchRes.data) && searchRes.data.length > 0) {
+        const match = searchRes.data.find((item: any) => item.syncedLyrics || item.plainLyrics) || searchRes.data[0];
+        if (match && (match.syncedLyrics || match.plainLyrics)) {
+          return res.json({
+            status: 'success',
+            source: 'lrclib-search',
+            title: match.trackName || title,
+            artist: match.artistName || artist,
+            syncedLyrics: match.syncedLyrics || null,
+            plainLyrics: match.plainLyrics || null,
+            instrumental: Boolean(match.instrumental),
+          });
+        }
+      }
+    } catch {
+      // Proceed to AudD fallback
+    }
+
+    // 3. AudD Lyrics Fallback if AUDD_API_TOKEN is available
+    const apiToken = process.env.AUDD_API_TOKEN;
+    if (apiToken) {
+      try {
+        const auddRes = await axios.get('https://api.audd.io/findLyrics/', {
+          params: {
+            api_token: apiToken,
+            q: `${cleanArtist} ${cleanTitle}`,
+          },
+          timeout: 6000,
+        });
+
+        if (auddRes.data?.status === 'success' && auddRes.data.result?.lyrics) {
+          return res.json({
+            status: 'success',
+            source: 'audd',
+            title: auddRes.data.result.title || title,
+            artist: auddRes.data.result.artist || artist,
+            syncedLyrics: null,
+            plainLyrics: auddRes.data.result.lyrics,
+            instrumental: false,
+          });
+        }
+      } catch {
+        // AudD fallback finished
+      }
+    }
+
+    return res.status(404).json({
+      status: 'not_found',
+      error: 'Lyrics not found for this track in public archives.',
+    });
+  } catch (err: any) {
+    console.error('[Lyrics Error]:', err.message);
+    res.status(500).json({ error: 'Failed to retrieve lyrics for this song.' });
+  }
+});
+
 // Recognition Endpoint
 apiRouter.post('/recognize', upload.single('audio'), async (req, res) => {
   try {

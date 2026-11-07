@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Pause, X, Music, ExternalLink, Share2 } from 'lucide-react';
+import { Play, Pause, X, Music, ExternalLink, Share2, Mic2 } from 'lucide-react';
 import { useAudioPlayer } from '../context/AudioPlayerContext';
 import { useShareModal } from '../context/ShareModalContext';
+import { useLyricsModal } from '../context/LyricsModalContext';
 
 export const AudioPlayerBar = () => {
   const { currentTrack, isPlaying, isLoading, progress, currentTime, duration, togglePlay, seekTrack, closePlayer } = useAudioPlayer();
   const { openShareModal } = useShareModal();
+  const { openLyrics } = useLyricsModal();
   const [imageError, setImageError] = useState(false);
 
   useEffect(() => {
@@ -128,6 +130,16 @@ export const AudioPlayerBar = () => {
                 ) : (
                   <Play className="w-4 h-4 fill-current ml-0.5" />
                 )}
+              </button>
+
+              {/* Real-time Lyrics Toggle */}
+              <button
+                onClick={() => openLyrics(currentTrack)}
+                className="p-2 rounded-xl btn-secondary-glass text-[var(--accent-primary)] hover:opacity-80 transition-colors border-[var(--accent-primary)]/10"
+                title="Show real-time lyrics"
+                aria-label="Show real-time lyrics"
+              >
+                <Mic2 className="w-4 h-4" />
               </button>
 
               {/* Share QR Code Button */}

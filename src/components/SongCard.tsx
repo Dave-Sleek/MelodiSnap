@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Play, Pause, Share2, Heart, Music, Check } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Play, Pause, Share2, Heart, Music, Check, Mic2 } from 'lucide-react';
 import { useAudioPlayer } from '../context/AudioPlayerContext';
 import { useToast } from '../context/ToastContext';
 import { useShareModal } from '../context/ShareModalContext';
+import { useLyricsModal } from '../context/LyricsModalContext';
+import { CanvasMusicVisualizer } from './CanvasMusicVisualizer';
+import { LyricsViewer } from './LyricsViewer';
 
 export interface SongResult {
   id?: string;
@@ -36,6 +39,7 @@ export const SongCard = ({
   const { currentTrack, isPlaying, isLoading, playTrack, togglePlay } = useAudioPlayer();
   const { showToast } = useToast();
   const { openShareModal } = useShareModal();
+  const { openLyrics, isOpen: isLyricsOpen } = useLyricsModal();
 
   const isCurrentTrack = Boolean(song.previewUrl && currentTrack?.previewUrl === song.previewUrl);
   const isCurrentTrackPlaying = isCurrentTrack && isPlaying;
@@ -141,20 +145,61 @@ export const SongCard = ({
           {/* Details */}
           <div className="flex-1 min-w-0 text-center sm:text-left space-y-4">
             <div>
-              <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[var(--accent-primary)] uppercase tracking-widest mb-1.5">
+              <motion.div 
+                key={`badge-${song.id || song.title}`}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-[var(--accent-primary)] uppercase tracking-widest mb-1.5"
+              >
                 <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-primary)]" />
                 <span>Identified Track</span>
-              </div>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-[var(--text-main)] truncate tracking-tight">
+              </motion.div>
+              
+              {/* Subtle elegant fade-in transition effect for song title */}
+              <motion.h2 
+                key={`title-${song.id || song.title}`}
+                initial={{ opacity: 0, y: 10, filter: 'blur(5px)' }}
+                animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                transition={{ 
+                  duration: 0.65, 
+                  ease: [0.16, 1, 0.3, 1],
+                  delay: 0.08
+                }}
+                className="text-2xl sm:text-3xl font-extrabold text-[var(--text-main)] truncate tracking-tight"
+              >
                 {song.title}
-              </h2>
-              <p className="text-base sm:text-lg text-[var(--text-sub)] font-medium truncate mt-0.5">
+              </motion.h2>
+
+              {/* Subtle elegant fade-in transition effect for artist name */}
+              <motion.p 
+                key={`artist-${song.id || song.artist}`}
+                initial={{ opacity: 0, y: 8, filter: 'blur(3px)' }}
+                animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                transition={{ 
+                  duration: 0.65, 
+                  ease: [0.16, 1, 0.3, 1],
+                  delay: 0.2
+                }}
+                className="text-base sm:text-lg text-[var(--text-sub)] font-medium truncate mt-0.5"
+              >
                 {song.artist}
-              </p>
+              </motion.p>
+
               {song.album && (
-                <p className="text-xs text-[var(--text-muted)] truncate mt-1">
+                <motion.p 
+                  key={`album-${song.id || song.album}`}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ 
+                    duration: 0.55, 
+                    ease: [0.16, 1, 0.3, 1],
+                    delay: 0.32
+                  }}
+                  className="text-xs text-[var(--text-muted)] truncate mt-1"
+                >
                   Album · {song.album}
-                </p>
+                </motion.p>
               )}
             </div>
 
@@ -206,8 +251,27 @@ export const SongCard = ({
                 <span>Spotify</span>
               </button>
 
+              {/* Show Real-time Lyrics Button */}
+              <button
+                onClick={() => openLyrics(song)}
+                className={`px-4 py-3 rounded-xl font-bold text-xs tracking-wide flex items-center gap-2 transition-all active:scale-95 shadow-sm border ${
+                  isLyricsOpen
+                    ? 'bg-[var(--accent-primary)] text-white border-transparent shadow-[0_0_15px_rgba(0,122,255,0.4)]'
+                    : 'btn-secondary-glass text-[var(--accent-primary)] hover:border-[var(--accent-primary)]/40 border-[var(--accent-primary)]/20'
+                }`}
+                title={isLyricsOpen ? 'Lyrics open' : 'Show real-time lyrics'}
+              >
+                <Mic2 className="w-4 h-4" />
+                <span>{isLyricsOpen ? 'Lyrics Open' : 'Show Lyrics'}</span>
+              </button>
+
             </div>
           </div>
+        </div>
+
+        {/* Real-time Canvas Music Visualizer embedded in Hero Display */}
+        <div className="mt-7 pt-5 border-t border-[var(--glass-border)]">
+          <CanvasMusicVisualizer height={110} variant="compact" />
         </div>
       </motion.div>
     );
@@ -266,12 +330,24 @@ export const SongCard = ({
           </div>
 
           <div className="min-w-0 flex-1">
-            <h4 className="text-sm font-bold text-[var(--text-main)] truncate leading-tight group-hover:text-[var(--accent-primary)] transition-colors">
+            <motion.h4 
+              key={`list-title-${song.id || song.title}`}
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+              className="text-sm font-bold text-[var(--text-main)] truncate leading-tight group-hover:text-[var(--accent-primary)] transition-colors"
+            >
               {song.title}
-            </h4>
-            <p className="text-xs text-[var(--text-muted)] truncate font-medium mt-0.5">
+            </motion.h4>
+            <motion.p 
+              key={`list-artist-${song.id || song.artist}`}
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.45, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+              className="text-xs text-[var(--text-muted)] truncate font-medium mt-0.5"
+            >
               {song.artist}
-            </p>
+            </motion.p>
           </div>
         </div>
 
@@ -390,12 +466,24 @@ export const SongCard = ({
 
         {/* Title & Artist */}
         <div className="space-y-0.5 mb-3">
-          <h4 className="text-sm font-bold text-[var(--text-main)] truncate leading-tight group-hover:text-[var(--accent-primary)] transition-colors">
+          <motion.h4 
+            key={`grid-title-${song.id || song.title}`}
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+            className="text-sm font-bold text-[var(--text-main)] truncate leading-tight group-hover:text-[var(--accent-primary)] transition-colors"
+          >
             {song.title}
-          </h4>
-          <p className="text-xs text-[var(--text-muted)] truncate font-medium">
+          </motion.h4>
+          <motion.p 
+            key={`grid-artist-${song.id || song.artist}`}
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+            className="text-xs text-[var(--text-muted)] truncate font-medium"
+          >
             {song.artist}
-          </p>
+          </motion.p>
         </div>
       </div>
 
