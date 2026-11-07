@@ -1,15 +1,18 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { getHistory, clearHistory, toggleFavourite } from '../lib/db';
 import { SongCard, SongResult } from '../components/SongCard';
-import { Trash2, Search, LayoutGrid, List, Download, AlertTriangle, X } from 'lucide-react';
+import { Trash2, Search, LayoutGrid, List, Share2, ArrowUpDown, AlertTriangle, X, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from '../context/ToastContext';
+import { isSpotifyConnected, saveTracksToSpotify } from '../lib/spotify';
 
 export const History = () => {
   const [songs, setSongs] = useState<SongResult[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest' | 'alphabetical'>('newest');
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [isSyncingSpotify, setIsSyncingSpotify] = useState(false);
   const { showToast } = useToast();
 
   useEffect(() => {
@@ -38,28 +41,87 @@ export const History = () => {
     showToast(isFav ? `Added "${song.title}" to Favourites` : `Removed "${song.title}" from Favourites`);
   };
 
-  const handleExport = () => {
+  const handleShareTracklist = async () => {
     if (songs.length === 0) {
-      showToast('No tracks in history to export', 'info');
+      showToast('No tracks in history to share', 'info');
       return;
     }
-    const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(songs, null, 2));
-    const downloadAnchor = document.createElement('a');
-    downloadAnchor.setAttribute('href', dataStr);
-    downloadAnchor.setAttribute('download', `chatcham_history_${new Date().toISOString().slice(0, 10)}.json`);
-    document.body.appendChild(downloadAnchor);
-    downloadAnchor.click();
-    downloadAnchor.remove();
-    showToast('Exported history as JSON');
+
+    const listText = songs
+      .map((s, idx) => `${idx + 1}. ${s.title} — ${s.artist}`)
+      .join('\n');
+    const sharePayload = `🎵 Songs discovered with melodisnap:\n\n${listText}\n\nCaptured with melodisnap`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'My melodisnap Discoveries',
+          text: sharePayload,
+        });
+        return;
+      } catch {
+        // Fallback to clipboard
+      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(sharePayload);
+      showToast('Tracklist copied to clipboard!');
+    } catch {
+      showToast('Could not copy tracklist', 'error');
+    }
+  };
+
+  const handleSyncToSpotify = async () => {
+    if (songs.length === 0) return;
+    const spotifyIds = songs.map((s) => s.spotifyId).filter(Boolean) as string[];
+    if (spotifyIds.length === 0) {
+      showToast('No tracks with Spotify links found to sync', 'info');
+      return;
+    }
+
+    if (!isSpotifyConnected()) {
+      showToast('Connect your Spotify in the Connect tab to sync Liked Songs', 'info');
+      return;
+    }
+
+    setIsSyncingSpotify(true);
+    try {
+      const res = await saveTracksToSpotify(spotifyIds);
+      showToast(`Saved ${res.count} ${res.count === 1 ? 'track' : 'tracks'} to your Spotify Liked Songs! 🟢`);
+    } catch (err: any) {
+      showToast(err.message || 'Failed to sync to Spotify', 'error');
+    } finally {
+      setIsSyncingSpotify(false);
+    }
+  };
+
+  const toggleSortOrder = () => {
+    if (sortOrder === 'newest') setSortOrder('oldest');
+    else if (sortOrder === 'oldest') setSortOrder('alphabetical');
+    else setSortOrder('newest');
+    
+    showToast(`Sorted by: ${
+      sortOrder === 'newest' ? 'Oldest first' : sortOrder === 'oldest' ? 'A-Z alphabetical' : 'Newest first'
+    }`);
   };
 
   const filteredSongs = useMemo(() => {
+    let result = [...songs];
     const q = searchQuery.toLowerCase().trim();
-    if (!q) return songs;
-    return songs.filter(
-      (s) => s.title.toLowerCase().includes(q) || s.artist.toLowerCase().includes(q)
-    );
-  }, [songs, searchQuery]);
+    if (q) {
+      result = result.filter(
+        (s) => s.title.toLowerCase().includes(q) || s.artist.toLowerCase().includes(q)
+      );
+    }
+    if (sortOrder === 'oldest') {
+      return [...result].reverse();
+    }
+    if (sortOrder === 'alphabetical') {
+      return [...result].sort((a, b) => a.title.localeCompare(b.title));
+    }
+    return result;
+  }, [songs, searchQuery, sortOrder]);
 
   return (
     <div className="min-h-screen pt-24 md:pt-32 pb-32 px-5 sm:px-8">
@@ -77,7 +139,7 @@ export const History = () => {
 
           <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
             {/* Search Input */}
-            <div className="relative flex-1 md:w-64">
+            <div className="relative flex-1 md:w-56">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
               <input
                 type="text"
@@ -112,15 +174,47 @@ export const History = () => {
               </button>
             </div>
 
-            {/* Export Button */}
+            {/* Sort Order Toggle */}
+            {songs.length > 1 && (
+              <button
+                onClick={toggleSortOrder}
+                className="p-2.5 rounded-xl btn-secondary-glass text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors flex items-center gap-1.5"
+                title={`Sort: ${sortOrder}`}
+                aria-label="Toggle sort order"
+              >
+                <ArrowUpDown className="w-4 h-4" />
+                <span className="text-[10px] uppercase font-bold tracking-wider hidden sm:inline">{sortOrder}</span>
+              </button>
+            )}
+
+            {/* Share Tracklist Button */}
             {songs.length > 0 && (
               <button
-                onClick={handleExport}
-                className="p-2.5 rounded-xl btn-secondary-glass text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors"
-                title="Export history JSON"
-                aria-label="Export history JSON"
+                onClick={handleShareTracklist}
+                className="p-2.5 rounded-xl btn-secondary-glass text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors flex items-center gap-1.5"
+                title="Share tracklist"
+                aria-label="Share tracklist"
               >
-                <Download className="w-4 h-4" />
+                <Share2 className="w-4 h-4" />
+                <span className="text-[10px] font-bold tracking-wider hidden sm:inline">Share</span>
+              </button>
+            )}
+
+            {/* Sync to Spotify Button */}
+            {songs.length > 0 && (
+              <button
+                onClick={handleSyncToSpotify}
+                disabled={isSyncingSpotify}
+                className="px-3 py-2 rounded-xl bg-[#1DB954]/15 hover:bg-[#1DB954]/25 text-[#1DB954] border border-[#1DB954]/30 hover:border-[#1DB954]/50 transition-all flex items-center gap-1.5 shadow-sm active:scale-95 disabled:opacity-50"
+                title="Save tracks to Spotify Liked Songs"
+                aria-label="Save tracks to Spotify Liked Songs"
+              >
+                {isSyncingSpotify ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.5 17.3c-.2.3-.6.4-.9.2-2.8-1.7-6.2-2.1-10.3-1.1-.3.1-.7-.1-.8-.4-.1-.3.1-.7.4-.8 4.5-1 8.3-.6 11.4 1.2.3.2.4.6.2.9zm1.5-3.3c-.3.4-.8.5-1.2.3-3.2-1.9-8-2.5-11.8-1.3-.5.1-1-.2-1.1-.7s.2-1 .7-1.1c4.4-1.3 9.7-.7 13.5 1.6.4.2.5.8.2 1.2zm.1-3.4C15.2 8.3 8.7 8.1 4.9 9.3c-.6.2-1.3-.2-1.5-.8-.2-.6.2-1.3.8-1.5 4.5-1.4 11.7-1.1 16.5 1.7.6.3.8 1.1.4 1.7-.3.5-1.1.7-1.7.4z"/></svg>
+                )}
+                <span className="text-[10px] font-extrabold uppercase tracking-wider hidden sm:inline">Sync Spotify</span>
               </button>
             )}
 

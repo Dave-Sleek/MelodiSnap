@@ -118,3 +118,30 @@ export const getValidSpotifyToken = async () => {
 
   return token;
 };
+
+export const isSpotifyConnected = () => {
+  return Boolean(localStorage.getItem('spotify_access_token'));
+};
+
+export const saveTracksToSpotify = async (spotifyTrackIds: string[]) => {
+  const token = await getValidSpotifyToken();
+  if (!token) throw new Error('Not connected to Spotify. Please connect in the Connect tab.');
+
+  const validIds = spotifyTrackIds.filter(Boolean).slice(0, 50);
+  if (validIds.length === 0) return { count: 0 };
+
+  const res = await fetch(`https://api.spotify.com/v1/me/tracks?ids=${validIds.join(',')}`, {
+    method: 'PUT',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error?.message || 'Failed to save tracks to Spotify');
+  }
+
+  return { count: validIds.length };
+};

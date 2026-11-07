@@ -75,15 +75,55 @@ export const MicrophoneButton = ({
       }
       setPermissionStatus('granted');
       
-      // Set up real-time audio volume analysis
+      // Set up real-time audio volume analysis & DSP Acoustic Pre-processing pipeline
+      // (Similar to Shazam: highpass rumble filter, presence EQ, dynamic range compression & gain boost for distant audio)
+      let recorderStream = stream;
       try {
         const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
         const ctx = new AudioCtx();
         audioContextRef.current = ctx;
         const source = ctx.createMediaStreamSource(stream);
+
+        // 1. Highpass filter to eliminate sub-bass room rumble (<80 Hz), AC hum, and handling vibrations
+        const highpass = ctx.createBiquadFilter();
+        highpass.type = 'highpass';
+        highpass.frequency.value = 80;
+
+        // 2. Presence filter: enhances lead instruments and vocal melody (1.5 kHz - 4 kHz)
+        const presence = ctx.createBiquadFilter();
+        presence.type = 'peaking';
+        presence.frequency.value = 2500;
+        presence.Q.value = 1.0;
+        presence.gain.value = 4.5; // +4.5 dB boost to musical melodic range
+
+        // 3. Dynamic Range Compressor: dramatically lifts faint, distant background music while taming loud peaks
+        const compressor = ctx.createDynamicsCompressor();
+        compressor.threshold.value = -38; // catches quiet signals down to -38 dB
+        compressor.knee.value = 20;
+        compressor.ratio.value = 8;
+        compressor.attack.value = 0.003;
+        compressor.release.value = 0.25;
+
+        // 4. Acoustic Gain Boost: amplifies faint distant audio signals by ~2.8x
+        const gainNode = ctx.createGain();
+        gainNode.gain.value = 2.8;
+
+        // 5. Connect to Analyser for real-time visualizer
         const analyser = ctx.createAnalyser();
         analyser.fftSize = 64;
-        source.connect(analyser);
+
+        // 6. Connect to MediaStreamDestination so MediaRecorder records the boosted, clean audio
+        const destination = ctx.createMediaStreamDestination();
+
+        source.connect(highpass);
+        highpass.connect(presence);
+        presence.connect(compressor);
+        compressor.connect(gainNode);
+        gainNode.connect(analyser);
+        gainNode.connect(destination);
+
+        // Use the DSP processed stream for the recorder
+        recorderStream = destination.stream;
 
         const dataArray = new Uint8Array(analyser.frequencyBinCount);
         const updateMeter = () => {
@@ -98,7 +138,8 @@ export const MicrophoneButton = ({
         };
         updateMeter();
       } catch (e) {
-        console.warn('Analyser setup fallback', e);
+        console.warn('DSP setup fallback to raw stream:', e);
+        recorderStream = stream;
       }
 
       // Explicitly check for supported mime types
@@ -112,12 +153,12 @@ export const MicrophoneButton = ({
 
       let mediaRecorder: MediaRecorder;
       try {
-        mediaRecorder = new MediaRecorder(stream, { 
+        mediaRecorder = new MediaRecorder(recorderStream, { 
           mimeType,
           audioBitsPerSecond: 128000 // High bitrate for crystal clear acoustic fingerprinting
         });
       } catch {
-        mediaRecorder = new MediaRecorder(stream);
+        mediaRecorder = new MediaRecorder(recorderStream);
       }
       mediaRecorderRef.current = mediaRecorder;
       chunksRef.current = [];
@@ -146,6 +187,9 @@ export const MicrophoneButton = ({
         }
         
         stream.getTracks().forEach((track) => track.stop());
+        if (recorderStream !== stream) {
+          recorderStream.getTracks().forEach((track) => track.stop());
+        }
         cleanupAudioNodes();
       };
 
