@@ -32,19 +32,33 @@ interface MelodisnapDB extends DBSchema {
     };
     indexes: { 'by-timestamp': number };
   };
+  charts: {
+    key: string; // 'global' or country code 'ng', 'za', etc.
+    value: {
+      countryCode: string;
+      tracks: any[]; // DiscoveryTrack[]
+      lastUpdated: number;
+    };
+  };
 }
 
 let dbPromise: Promise<IDBPDatabase<MelodisnapDB>> | null = null;
 
 export const getDB = () => {
   if (!dbPromise) {
-    dbPromise = openDB<MelodisnapDB>('melodisnap-db', 1, {
-      upgrade(db) {
-        const historyStore = db.createObjectStore('history', { keyPath: 'id' });
-        historyStore.createIndex('by-timestamp', 'timestamp');
+    dbPromise = openDB<MelodisnapDB>('melodisnap-db', 2, {
+      upgrade(db, oldVersion) {
+        if (oldVersion < 1) {
+          const historyStore = db.createObjectStore('history', { keyPath: 'id' });
+          historyStore.createIndex('by-timestamp', 'timestamp');
 
-        const favoritesStore = db.createObjectStore('favourites', { keyPath: 'id' });
-        favoritesStore.createIndex('by-timestamp', 'timestamp');
+          const favoritesStore = db.createObjectStore('favourites', { keyPath: 'id' });
+          favoritesStore.createIndex('by-timestamp', 'timestamp');
+        }
+        
+        if (oldVersion < 2) {
+          db.createObjectStore('charts', { keyPath: 'countryCode' });
+        }
       },
     });
   }
@@ -116,4 +130,18 @@ export const toggleFavourite = async (song: DbTrackInput) => {
 export const getFavourites = async () => {
   const db = await getDB();
   return db.getAllFromIndex('favourites', 'by-timestamp');
+};
+
+export const getChart = async (countryCode: string) => {
+  const db = await getDB();
+  return db.get('charts', countryCode);
+};
+
+export const saveChart = async (countryCode: string, tracks: any[]) => {
+  const db = await getDB();
+  await db.put('charts', {
+    countryCode,
+    tracks,
+    lastUpdated: Date.now(),
+  });
 };

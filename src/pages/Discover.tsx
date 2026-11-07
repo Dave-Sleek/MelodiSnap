@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { SongCard, SongResult } from '../components/SongCard';
-import { Search, Compass, Flame, Play, Pause, Heart, Share2, TrendingUp, Radio, RefreshCw, Sparkles } from 'lucide-react';
-import { toggleFavourite } from '../lib/db';
+import { Search, Compass, Flame, Play, Pause, Heart, Share2, TrendingUp, Radio, RefreshCw, Sparkles, Globe } from 'lucide-react';
+import { toggleFavourite, getChart, saveChart } from '../lib/db';
 import { useToast } from '../context/ToastContext';
 import { useAudioPlayer } from '../context/AudioPlayerContext';
 import { useShareModal } from '../context/ShareModalContext';
@@ -11,6 +11,19 @@ export interface DiscoveryTrack extends SongResult {
   trendRank: number;
   vibe: string;
 }
+
+export const AFRICAN_COUNTRIES = [
+  { id: 'ng', name: 'Nigeria', flag: '🇳🇬' },
+  { id: 'za', name: 'South Africa', flag: '🇿🇦' },
+  { id: 'gh', name: 'Ghana', flag: '🇬🇭' },
+  { id: 'ke', name: 'Kenya', flag: '🇰🇪' },
+  { id: 'tz', name: 'Tanzania', flag: '🇹🇿' },
+  { id: 'ug', name: 'Uganda', flag: '🇺🇬' },
+  { id: 'cm', name: 'Cameroon', flag: '🇨🇲' },
+  { id: 'sn', name: 'Senegal', flag: '🇸🇳' },
+  { id: 'ci', name: 'Côte d’Ivoire', flag: '🇨🇮' },
+  { id: 'cd', name: 'DR Congo', flag: '🇨🇩' },
+];
 
 // Curated latest global megahits as instant initial state & reliable offline fallback
 const DEFAULT_SPOTLIGHT_TRACK: SongResult = {
@@ -181,7 +194,9 @@ export const Discover = () => {
   const [spotlightTrack, setSpotlightTrack] = useState<SongResult>(DEFAULT_SPOTLIGHT_TRACK);
   const [discoveryTracks, setDiscoveryTracks] = useState<DiscoveryTrack[]>(DEFAULT_DISCOVERY_TRACKS);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [chartStatus, setChartStatus] = useState<string>('Live Global Billboard & Spotify Charts');
+  const [chartStatus, setChartStatus] = useState<string>('Live Global Charts');
+  const [selectedCountry, setSelectedCountry] = useState<string>('global');
+  const [lastUpdatedDate, setLastUpdatedDate] = useState<string>('');
 
   const [selectedGenre, setSelectedGenre] = useState('All Genres');
   const [selectedVibe, setSelectedVibe] = useState('All Vibes');
@@ -192,13 +207,37 @@ export const Discover = () => {
   const { showToast } = useToast();
   const { openShareModal } = useShareModal();
 
-  // Load real-time weekly top chart dynamically
-  const loadLiveCharts = async (showNotice = false) => {
+  // Load real-time top chart dynamically with Intelligent Caching
+  const loadLiveCharts = async (countryCode = 'global', forceRefresh = false) => {
     setIsRefreshing(true);
+    const chartKey = countryCode === 'global' ? 'us' : countryCode;
+    
     try {
-      const res = await fetch('https://itunes.apple.com/us/rss/topsongs/limit=30/json', {
+      // 1. Check Database Cache First
+      if (!forceRefresh) {
+        const cached = await getChart(countryCode);
+        if (cached) {
+          const now = Date.now();
+          const oneDay = 24 * 60 * 60 * 1000;
+          const oneWeek = 7 * oneDay;
+          const expiry = countryCode === 'global' ? oneWeek : oneDay;
+          
+          if (now - cached.lastUpdated < expiry) {
+            setSpotlightTrack(cached.tracks[0]);
+            setDiscoveryTracks(cached.tracks.slice(1));
+            setLastUpdatedDate(new Date(cached.lastUpdated).toLocaleDateString());
+            setChartStatus(`${countryCode === 'global' ? 'Global' : AFRICAN_COUNTRIES.find(c => c.id === countryCode)?.name} Top 30`);
+            setIsRefreshing(false);
+            return;
+          }
+        }
+      }
+
+      // 2. Fetch Fresh Data from iTunes Store RSS
+      const res = await fetch(`https://itunes.apple.com/${chartKey}/rss/topsongs/limit=30/json`, {
         headers: { Accept: 'application/json' },
       });
+      
       if (!res.ok) throw new Error('Live chart unavailable');
 
       const data = await res.json();
@@ -220,7 +259,7 @@ export const Discover = () => {
         const estShazams = Math.max(1.2, +(9.6 - idx * 0.28).toFixed(1));
 
         return {
-          id: `chart-${e.id?.attributes?.['im:id'] || idx}-${rank}`,
+          id: `chart-${countryCode}-${e.id?.attributes?.['im:id'] || idx}-${rank}`,
           trendRank: rank,
           title,
           artist,
@@ -238,15 +277,30 @@ export const Discover = () => {
       if (parsed.length > 0) {
         setSpotlightTrack(parsed[0]);
         setDiscoveryTracks(parsed.slice(1));
-        setChartStatus('Updated Weekly · Live Global Charts');
-        if (showNotice) {
-          showToast('Updated with current global top 30 hits!');
+        const now = Date.now();
+        setLastUpdatedDate(new Date(now).toLocaleDateString());
+        setChartStatus(`${countryCode === 'global' ? 'Global' : AFRICAN_COUNTRIES.find(c => c.id === countryCode)?.name} Top 30`);
+        
+        // Save to cache
+        await saveChart(countryCode, parsed);
+        
+        if (forceRefresh) {
+          showToast(`Refreshed ${countryCode === 'global' ? 'Global' : 'African'} charts!`);
         }
       }
-    } catch {
-      setChartStatus('Top Global Trending Hits');
-      if (showNotice) {
-        showToast('Charts up-to-date with top trending tracks');
+    } catch (err) {
+      console.error('Chart fetch failed:', err);
+      // Fallback to cache if fresh fetch fails
+      const cached = await getChart(countryCode);
+      if (cached) {
+        setSpotlightTrack(cached.tracks[0]);
+        setDiscoveryTracks(cached.tracks.slice(1));
+        setLastUpdatedDate(new Date(cached.lastUpdated).toLocaleDateString());
+        showToast('Using cached chart data (offline or server error)', 'info');
+      } else if (countryCode === 'global') {
+        // Fallback to hardcoded defaults for global only
+        setSpotlightTrack(DEFAULT_SPOTLIGHT_TRACK);
+        setDiscoveryTracks(DEFAULT_DISCOVERY_TRACKS);
       }
     } finally {
       setIsRefreshing(false);
@@ -254,8 +308,8 @@ export const Discover = () => {
   };
 
   useEffect(() => {
-    loadLiveCharts();
-  }, []);
+    loadLiveCharts(selectedCountry);
+  }, [selectedCountry]);
 
   const handleToggleFavourite = async (song: SongResult) => {
     try {
@@ -341,23 +395,33 @@ export const Discover = () => {
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-xs font-bold text-[var(--accent-primary)] uppercase tracking-widest">
               <Compass className="w-4 h-4" />
-              <span>Global Top 30 Charts · Updated Weekly</span>
+              <span>{selectedCountry === 'global' ? 'Global Top 30 Charts · Updated Weekly' : 'African Top 30 Charts · Updated Daily'}</span>
             </div>
             <h1 className="text-3xl sm:text-5xl font-black text-[var(--text-main)] tracking-tight">
-              Music Discovery
+              {selectedCountry === 'global' ? 'Global Discovery' : 'African Discovery'}
             </h1>
             <p className="text-sm sm:text-base text-[var(--text-muted)] max-w-xl">
-              Real-time trending songs updated every week. Listen to studio 30-second previews and open full tracks directly on Spotify.
+              {selectedCountry === 'global' 
+                ? "Real-time trending songs updated every week. Discover what's hot worldwide right now."
+                : `Hottest hits and emerging sounds from ${AFRICAN_COUNTRIES.find(c => c.id === selectedCountry)?.name}. Updated daily.`
+              }
             </p>
 
             {/* Live Chart Status & Refresh Trigger */}
-            <div className="flex items-center gap-2.5 pt-1">
+            <div className="flex flex-wrap items-center gap-2.5 pt-1">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[11px] font-semibold">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                 <span>{chartStatus}</span>
               </span>
+              
+              {lastUpdatedDate && (
+                <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-tight bg-[var(--subtle-btn-bg)] px-2.5 py-1 rounded-lg">
+                  Last Updated: {lastUpdatedDate}
+                </span>
+              )}
+
               <button
-                onClick={() => loadLiveCharts(true)}
+                onClick={() => loadLiveCharts(selectedCountry, true)}
                 disabled={isRefreshing}
                 className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl btn-secondary-glass text-xs text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors active:scale-95 disabled:opacity-50"
                 title="Refresh current live chart"
@@ -380,6 +444,58 @@ export const Discover = () => {
             />
           </div>
         </header>
+
+        {/* COUNTRY SELECTOR: AFRICAN TOP CHARTS */}
+        <section className="space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <h3 className="text-xl font-black text-[var(--text-main)] flex items-center gap-2 uppercase tracking-tighter">
+                <Globe className="w-5 h-5 text-[var(--accent-primary)]" />
+                <span>African Top Charts</span>
+              </h3>
+              <p className="text-xs text-[var(--text-muted)] font-medium">Discover the hottest songs and emerging hits across Africa.</p>
+            </div>
+
+            <div className="flex items-center gap-2 bg-[var(--subtle-btn-bg)] p-1 rounded-xl border border-[var(--glass-border)]">
+              <button
+                onClick={() => setSelectedCountry('global')}
+                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  selectedCountry === 'global'
+                    ? 'bg-[var(--accent-primary)] text-white shadow-md'
+                    : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'
+                }`}
+              >
+                Global Top 30
+              </button>
+              <div className="w-[1px] h-4 bg-[var(--glass-border)]" />
+              <span className="px-3 text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">Select Region</span>
+            </div>
+          </div>
+
+          {/* Country Selection Grid/Tabs */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-10 gap-3">
+            {AFRICAN_COUNTRIES.map((country) => (
+              <button
+                key={country.id}
+                onClick={() => setSelectedCountry(country.id)}
+                className={`flex flex-col items-center justify-center p-3 rounded-2xl border transition-all active:scale-95 group ${
+                  selectedCountry === country.id
+                    ? 'bg-[var(--accent-primary)]/10 border-[var(--accent-primary)] shadow-[0_0_15px_rgba(0,122,255,0.1)]'
+                    : 'bg-[var(--card-bg)] border-[var(--glass-border)] hover:border-[var(--accent-primary)]/50 hover:bg-[var(--subtle-btn-bg)]'
+                }`}
+              >
+                <span className={`text-2xl mb-1 transition-transform group-hover:scale-110 ${selectedCountry === country.id ? 'scale-110' : ''}`}>
+                  {country.flag}
+                </span>
+                <span className={`text-[10px] font-bold text-center truncate w-full ${
+                  selectedCountry === country.id ? 'text-[var(--accent-primary)]' : 'text-[var(--text-muted)]'
+                }`}>
+                  {country.name}
+                </span>
+              </button>
+            ))}
+          </div>
+        </section>
 
         {/* FEATURED SPOTLIGHT: #1 Chart Track Glass Showcase */}
         <section className="relative overflow-hidden rounded-3xl glass-card p-6 sm:p-8 md:p-10 border border-[var(--accent-primary)]/10 shadow-2xl">
@@ -421,7 +537,7 @@ export const Discover = () => {
               <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2">
                 <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest bg-[var(--accent-primary)]/10 text-[var(--accent-primary)] border border-[var(--accent-primary)]/20 flex items-center gap-1.5">
                   <Sparkles className="w-3 h-3" />
-                  <span>#1 Trending Track of the Week</span>
+                  <span>#1 in {selectedCountry === 'global' ? 'Global Charts' : AFRICAN_COUNTRIES.find(c => c.id === selectedCountry)?.name}</span>
                 </span>
                 <span className="inline-flex items-center gap-1.5 text-xs text-[var(--text-muted)]">
                   <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-[#1DB954]"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.5 17.3c-.2.3-.6.4-.9.2-2.8-1.7-6.2-2.1-10.3-1.1-.3.1-.7-.1-.8-.4-.1-.3.1-.7.4-.8 4.5-1 8.3-.6 11.4 1.2.3.2.4.6.2.9zm1.5-3.3c-.3.4-.8.5-1.2.3-3.2-1.9-8-2.5-11.8-1.3-.5.1-1-.2-1.1-.7s.2-1 .7-1.1c4.4-1.3 9.7-.7 13.5 1.6.4.2.5.8.2 1.2zm.1-3.4C15.2 8.3 8.7 8.1 4.9 9.3c-.6.2-1.3-.2-1.5-.8-.2-.6.2-1.3.8-1.5 4.5-1.4 11.7-1.1 16.5 1.7.6.3.8 1.1.4 1.7-.3.5-1.1.7-1.7.4z"/></svg>
@@ -439,7 +555,7 @@ export const Discover = () => {
               </div>
 
               <p className="text-xs sm:text-sm text-[var(--text-muted)] max-w-2xl leading-relaxed">
-                Holding the top position on this week's global streaming charts. Listen to the 30-second studio audio preview or launch the complete track directly in Spotify.
+                Holding the top position on this region's streaming charts. Listen to the 30-second studio audio preview or launch the complete track directly in Spotify.
               </p>
 
               {/* Playback & Action Controls */}
@@ -492,9 +608,9 @@ export const Discover = () => {
 
         {/* Live Community Discovery Strip */}
         <div className="glass-card rounded-2xl p-4 flex flex-col md:flex-row items-center justify-between gap-4 border border-[var(--glass-border)] text-xs">
-          <div className="flex items-center gap-2.5 text-[var(--accent-primary)] font-bold tracking-wide uppercase">
+          <div className="flex items-center gap-2.5 text-[var(--accent-primary)] font-bold tracking-wide uppercase whitespace-nowrap">
             <Radio className="w-4 h-4 text-[var(--accent-primary)] animate-pulse" />
-            <span>Live Global Radar</span>
+            <span>Live {selectedCountry === 'global' ? 'Global' : AFRICAN_COUNTRIES.find(c => c.id === selectedCountry)?.name} Radar</span>
           </div>
           <div className="flex items-center gap-4 overflow-x-auto no-scrollbar w-full md:w-auto text-[var(--text-muted)]">
             {liveRadarItems.map((item, i) => (
@@ -553,47 +669,57 @@ export const Discover = () => {
         </div>
 
         {/* Discovery Tracks Grid */}
-        {filteredSongs.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredSongs.map((song, i) => (
-              <div key={song.id} className="relative">
-                {/* Ranking Pill Overlay */}
-                <div className="absolute top-2 left-2 z-20 px-2.5 py-1 rounded-lg bg-black/75 backdrop-blur-md text-[10px] font-black text-white border border-white/10 shadow-lg flex items-center gap-1">
-                  <TrendingUp className="w-3 h-3 text-[var(--accent-primary)]" />
-                  <span>#{song.trendRank}</span>
-                  <span className="text-white/40">·</span>
-                  <span className="text-[var(--accent-primary)]">{song.shazamCount}</span>
-                </div>
+        <div className="relative min-h-[400px]">
+          {isRefreshing && (
+            <div className="absolute inset-0 z-30 bg-[var(--bg-primary)]/60 backdrop-blur-sm flex flex-col items-center justify-center rounded-3xl">
+              <RefreshCw className="w-10 h-10 text-[var(--accent-primary)] animate-spin mb-4" />
+              <p className="text-sm font-bold text-[var(--text-main)]">Refreshing Charts...</p>
+              <p className="text-xs text-[var(--text-muted)]">Fetching latest hits for this region</p>
+            </div>
+          )}
 
-                <SongCard
-                  song={{
-                    ...song,
-                    isFavourite: favouriteIds.has(song.id || song.title),
-                  }}
-                  onToggleFavourite={() => handleToggleFavourite(song)}
-                  index={i}
-                />
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="py-24 text-center glass-card rounded-3xl p-8 border border-[var(--glass-border)] max-w-md mx-auto">
-            <p className="text-sm font-bold text-[var(--text-main)] mb-1">No matching tracks found</p>
-            <p className="text-xs text-[var(--text-muted)] mb-5">
-              Try choosing a different genre or clearing your search filter.
-            </p>
-            <button
-              onClick={() => {
-                setSelectedGenre('All Genres');
-                setSelectedVibe('All Vibes');
-                setSearchQuery('');
-              }}
-              className="btn-primary-glass px-5 py-2.5 rounded-xl text-xs font-bold text-white"
-            >
-              Reset Filters
-            </button>
-          </div>
-        )}
+          {filteredSongs.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {filteredSongs.map((song, i) => (
+                <div key={song.id} className="relative">
+                  {/* Ranking Pill Overlay */}
+                  <div className="absolute top-2 left-2 z-20 px-2.5 py-1 rounded-lg bg-black/75 backdrop-blur-md text-[10px] font-black text-white border border-white/10 shadow-lg flex items-center gap-1">
+                    <TrendingUp className="w-3 h-3 text-[var(--accent-primary)]" />
+                    <span>#{song.trendRank}</span>
+                    <span className="text-white/40">·</span>
+                    <span className="text-[var(--accent-primary)]">{song.shazamCount}</span>
+                  </div>
+
+                  <SongCard
+                    song={{
+                      ...song,
+                      isFavourite: favouriteIds.has(song.id || song.title),
+                    }}
+                    onToggleFavourite={() => handleToggleFavourite(song)}
+                    index={i}
+                  />
+                </div>
+              ))}
+            </div>
+          ) : !isRefreshing && (
+            <div className="py-24 text-center glass-card rounded-3xl p-8 border border-[var(--glass-border)] max-w-md mx-auto">
+              <p className="text-sm font-bold text-[var(--text-main)] mb-1">No matching tracks found</p>
+              <p className="text-xs text-[var(--text-muted)] mb-5">
+                Try choosing a different genre or clearing your search filter.
+              </p>
+              <button
+                onClick={() => {
+                  setSelectedGenre('All Genres');
+                  setSelectedVibe('All Vibes');
+                  setSearchQuery('');
+                }}
+                className="btn-primary-glass px-5 py-2.5 rounded-xl text-xs font-bold text-white"
+              >
+                Reset Filters
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
