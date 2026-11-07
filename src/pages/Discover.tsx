@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { SongCard, SongResult } from '../components/SongCard';
-import { Search, Compass, Flame, Play, Pause, Heart, Share2, TrendingUp, Radio, RefreshCw, Sparkles, Globe } from 'lucide-react';
+import { Search, Compass, Flame, Play, Pause, Heart, Share2, TrendingUp, Radio, RefreshCw, Trophy, Globe } from 'lucide-react';
 import { toggleFavourite, getChart, saveChart } from '../lib/db';
 import { useToast } from '../context/ToastContext';
 import { useAudioPlayer } from '../context/AudioPlayerContext';
@@ -536,7 +536,7 @@ export const Discover = () => {
             <div className="flex-1 text-center lg:text-left space-y-4">
               <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2">
                 <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest bg-[var(--accent-primary)]/10 text-[var(--accent-primary)] border border-[var(--accent-primary)]/20 flex items-center gap-1.5">
-                  <Sparkles className="w-3 h-3" />
+                  <Trophy className="w-3 h-3" />
                   <span>#1 in {selectedCountry === 'global' ? 'Global Charts' : AFRICAN_COUNTRIES.find(c => c.id === selectedCountry)?.name}</span>
                 </span>
                 <span className="inline-flex items-center gap-1.5 text-xs text-[var(--text-muted)]">

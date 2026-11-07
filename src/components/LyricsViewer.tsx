@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mic2, X, Copy, Check, RefreshCw, AlertCircle, Sparkles, Play, Pause, AlignLeft, Clock } from 'lucide-react';
+import { Mic2, X, Copy, Check, RefreshCw, AlertCircle, Music, Play, Pause, AlignLeft, Clock } from 'lucide-react';
 import { useAudioPlayer } from '../context/AudioPlayerContext';
 import { useToast } from '../context/ToastContext';
 import { SongResult } from './SongCard';
@@ -297,7 +297,7 @@ export const LyricsViewer: React.FC<LyricsViewerProps> = ({
         {isInstrumental && !loading && (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <div className="w-12 h-12 rounded-2xl bg-[var(--accent-primary)]/15 border border-[var(--accent-primary)]/30 text-[var(--accent-primary)] flex items-center justify-center mb-3">
-              <Sparkles className="w-6 h-6" />
+              <Music className="w-6 h-6" />
             </div>
             <h4 className="text-base font-bold text-[var(--text-main)] mb-1">
               Instrumental Track

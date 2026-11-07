@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { useAudioPlayer } from '../context/AudioPlayerContext';
-import { Activity, Radio, Disc3, Volume2, Sparkles } from 'lucide-react';
+import { Activity, Radio, Disc3, Volume2 } from 'lucide-react';
 
 export type VisualizerMode = 'bars' | 'wave' | 'pulse';
 

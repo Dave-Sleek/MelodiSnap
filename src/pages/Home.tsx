@@ -3,7 +3,7 @@ import { SongCard } from '../components/SongCard';
 import { CanvasMusicVisualizer } from '../components/CanvasMusicVisualizer';
 import { getHistory } from '../lib/db';
 import { motion, AnimatePresence } from 'framer-motion';
-import { WifiOff, AlertCircle, History, Sparkles, SearchX, UploadCloud, Loader2, Mic } from 'lucide-react';
+import { WifiOff, AlertCircle, History, Zap, SearchX, UploadCloud, Loader2, Mic, Lightbulb } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAudioPlayer } from '../context/AudioPlayerContext';
 import { useIdentification } from '../context/IdentificationContext';
@@ -192,7 +192,7 @@ export const Home = ({ isOffline }: { isOffline?: boolean }) => {
                     disabled={isProcessing || isListening}
                     className="btn-secondary-glass px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-2 hover:border-amber-400/40 transition-all text-[var(--text-muted)] hover:text-[var(--text-main)] shadow-sm"
                   >
-                    <Sparkles className="w-4 h-4 text-amber-400" />
+                    <Zap className="w-4 h-4 text-amber-400" />
                     <span>Try Demo Track</span>
                   </button>
                   <input
@@ -227,7 +227,7 @@ export const Home = ({ isOffline }: { isOffline?: boolean }) => {
 
                 <div className="text-left bg-[var(--subtle-btn-bg)] rounded-2xl p-4 sm:p-5 mb-6 space-y-3 text-xs text-[var(--text-muted)] border border-[var(--glass-border)]">
                   <div className="font-semibold text-[var(--text-main)] flex items-center gap-1.5 text-xs">
-                    <Sparkles className="w-3.5 h-3.5 text-amber-400" /> Tips for an accurate match:
+                    <Lightbulb className="w-3.5 h-3.5 text-amber-400" /> Tips for an accurate match:
                   </div>
                   <ul className="space-y-2.5 list-none pl-0">
                     <li className="flex items-start gap-2.5">
