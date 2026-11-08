@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { SongCard, SongResult } from '../components/SongCard';
 import { Search, Compass, Flame, Play, Pause, Heart, Share2, TrendingUp, Radio, RefreshCw, Trophy, Globe } from 'lucide-react';
 import { toggleFavourite, getChart, saveChart } from '../lib/db';
@@ -472,26 +473,32 @@ export const Discover = () => {
             </div>
           </div>
 
-          {/* Country Selection Grid/Tabs */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-10 gap-3">
+          {/* Country Selection Grid/Tabs - Enhanced for attractiveness */}
+          <div className="flex items-center gap-3 overflow-x-auto pb-4 no-scrollbar -mx-5 px-5 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-5 lg:grid-cols-10 sm:overflow-visible">
             {AFRICAN_COUNTRIES.map((country) => (
               <button
                 key={country.id}
                 onClick={() => setSelectedCountry(country.id)}
-                className={`flex flex-col items-center justify-center p-3 rounded-2xl border transition-all active:scale-95 group ${
+                className={`flex flex-col items-center justify-center p-4 rounded-2xl border transition-all active:scale-95 group min-w-[90px] sm:min-w-0 ${
                   selectedCountry === country.id
-                    ? 'bg-[var(--accent-primary)]/10 border-[var(--accent-primary)] shadow-[0_0_15px_rgba(0,122,255,0.1)]'
+                    ? 'bg-[var(--accent-primary)] text-white border-transparent shadow-[0_8px_20px_rgba(0,122,255,0.3)] scale-105'
                     : 'bg-[var(--card-bg)] border-[var(--glass-border)] hover:border-[var(--accent-primary)]/50 hover:bg-[var(--subtle-btn-bg)]'
                 }`}
               >
-                <span className={`text-2xl mb-1 transition-transform group-hover:scale-110 ${selectedCountry === country.id ? 'scale-110' : ''}`}>
+                <span className={`text-3xl mb-2 transition-transform duration-300 group-hover:scale-110 ${selectedCountry === country.id ? 'scale-110 drop-shadow-md' : ''}`}>
                   {country.flag}
                 </span>
-                <span className={`text-[10px] font-bold text-center truncate w-full ${
-                  selectedCountry === country.id ? 'text-[var(--accent-primary)]' : 'text-[var(--text-muted)]'
+                <span className={`text-[11px] font-black text-center truncate w-full tracking-tight uppercase ${
+                  selectedCountry === country.id ? 'text-white' : 'text-[var(--text-muted)]'
                 }`}>
-                  {country.name}
+                  {country.name.split(' ')[0]}
                 </span>
+                {selectedCountry === country.id && (
+                  <motion.div 
+                    layoutId="active-country-dot"
+                    className="w-1.5 h-1.5 rounded-full bg-white mt-2 shadow-sm" 
+                  />
+                )}
               </button>
             ))}
           </div>

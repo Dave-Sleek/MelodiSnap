@@ -32,7 +32,7 @@ export const Navbar = () => {
   return (
     <>
       {/* Desktop Top Bar (Strict 3-zone contract) */}
-      <header className="fixed top-0 left-0 right-0 z-40 hidden md:flex items-center justify-between gap-8 h-16 px-8 glass border-b border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-xl">
+      <header className="fixed top-0 left-0 right-0 z-[70] hidden md:flex items-center justify-between gap-8 h-16 px-8 glass border-b border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-xl">
         {/* Zone 1: Wordmark */}
         <NavLink to="/" className="flex items-center gap-2 text-lg font-bold tracking-tight text-[var(--text-main)] hover:opacity-80 transition-opacity whitespace-nowrap shrink-0">
           <div className="w-8 h-8 rounded-lg bg-[var(--accent-primary)] flex items-center justify-center text-white shadow-sm">
@@ -134,7 +134,7 @@ export const Navbar = () => {
       </header>
 
       {/* Mobile Top Bar */}
-      <div className="fixed top-0 left-0 right-0 z-40 flex md:hidden items-center justify-between h-14 px-5 glass border-b border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-xl">
+      <div className="fixed top-0 left-0 right-0 z-[70] flex md:hidden items-center justify-between h-14 px-5 glass border-b border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-xl">
         <NavLink to="/" className="flex items-center gap-2 font-bold text-base text-[var(--text-main)]">
           <div className="w-7 h-7 rounded-lg bg-[var(--accent-primary)] flex items-center justify-center text-white shadow-sm">
             <Mic className="w-3.5 h-3.5 text-white fill-current" />
@@ -152,7 +152,7 @@ export const Navbar = () => {
       </div>
 
       {/* Mobile Bottom Tab Bar (TikTok / YouTube / Shazam style centered primary button) */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 md:hidden glass border-t border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-2xl pb-safe">
+      <nav className="fixed bottom-0 left-0 right-0 z-[70] md:hidden glass border-t border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-2xl pb-safe">
         <div className="grid grid-cols-5 items-center h-16 px-1 relative">
           {/* 1. Discover */}
           <MobileNavItem to="/discover" icon={<Compass />} label="Discover" />

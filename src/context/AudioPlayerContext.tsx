@@ -208,12 +208,18 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
         return;
       }
 
-      await ensureAudioGraph();
       setIsLoading(true);
       
-      // Secondary safety check for context state
-      if (audioCtxRef.current && audioCtxRef.current.state === 'suspended') {
-        await audioCtxRef.current.resume();
+      // Critical: Ensure AudioContext is initialized and active
+      await ensureAudioGraph();
+      
+      // Aggressive resume for browsers that suspend after mic usage
+      if (audioCtxRef.current) {
+        if (audioCtxRef.current.state === 'suspended') {
+          await audioCtxRef.current.resume();
+        }
+        // Small hardware release buffer if coming from identification
+        await new Promise(resolve => setTimeout(resolve, 50));
       }
 
       const promise = audio.play();

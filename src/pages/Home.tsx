@@ -3,7 +3,7 @@ import { SongCard } from '../components/SongCard';
 import { CanvasMusicVisualizer } from '../components/CanvasMusicVisualizer';
 import { getHistory } from '../lib/db';
 import { motion, AnimatePresence } from 'framer-motion';
-import { WifiOff, AlertCircle, History, Zap, SearchX, UploadCloud, Loader2, Mic, Lightbulb, Music2, ArrowDown } from 'lucide-react';
+import { WifiOff, AlertCircle, History, SearchX, UploadCloud, Loader2, Mic, Lightbulb, Music2, ArrowDown, Play, Link2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAudioPlayer } from '../context/AudioPlayerContext';
 import { useIdentification } from '../context/IdentificationContext';
@@ -54,10 +54,10 @@ export const Home = ({ isOffline }: { isOffline?: boolean }) => {
             className="text-center mb-12 sm:mb-20 space-y-4"
           >
             <h1 className="text-5xl sm:text-7xl font-black text-[var(--text-main)] tracking-tight text-balance leading-[1.1]">
-              Capture every <span className="text-[var(--accent-primary)]">melody.</span>
+              Identify every <span className="text-[var(--accent-primary)]">rhythm.</span>
             </h1>
-            <p className="text-base sm:text-xl text-[var(--text-muted)] max-w-xl mx-auto font-medium leading-relaxed opacity-80">
-              Experience instant music recognition. Identify tracks, explore lyrics, and sync to your library in one tap.
+            <p className="text-base sm:text-xl text-[var(--text-muted)] max-w-2xl mx-auto font-medium leading-relaxed opacity-80">
+              Capture the music playing around you in seconds. Discover tracks instantly, listen to studio previews, and sync to your streaming library.
             </p>
           </motion.header>
         )}
@@ -227,10 +227,10 @@ export const Home = ({ isOffline }: { isOffline?: boolean }) => {
                   <button
                     onClick={() => startIdentification()}
                     disabled={isProcessing || isListening}
-                    className="btn-secondary-glass px-5 py-3 rounded-2xl text-xs font-bold flex items-center gap-2 hover:border-amber-400/40 transition-all text-[var(--text-muted)] hover:text-[var(--text-main)] shadow-sm bg-[var(--glass-bg)] backdrop-blur-lg"
+                    className="btn-secondary-glass px-5 py-3 rounded-2xl text-xs font-bold flex items-center gap-2 hover:border-[var(--accent-primary)]/40 transition-all text-[var(--text-muted)] hover:text-[var(--text-main)] shadow-sm bg-[var(--glass-bg)] backdrop-blur-lg"
                   >
-                    <Zap className="w-4 h-4 text-amber-400" />
-                    <span>Demo Track</span>
+                    <Play className="w-4 h-4 text-[var(--accent-primary)] fill-current" />
+                    <span>Try Demo Track</span>
                   </button>
                   <input
                     ref={fileInputRef}
@@ -372,7 +372,7 @@ export const Home = ({ isOffline }: { isOffline?: boolean }) => {
               {[
                 { title: 'Crystal Clear', desc: 'Position your device near speakers for high-fidelity recognition accuracy.', icon: <Mic className="w-5 h-5" /> },
                 { title: 'Studio Preview', desc: 'Listen to 30-second studio previews instantly with integrated controls.', icon: <Music2 className="w-5 h-5" /> },
-                { title: 'Instant Sync', desc: 'Open songs in Spotify or generate QR codes to share your finds.', icon: <Zap className="w-5 h-5" /> }
+                { title: 'Instant Sync', desc: 'Open songs in Spotify or generate QR codes to share your finds.', icon: <Link2 className="w-5 h-5" /> }
               ].map((item, i) => (
                 <div key={i} className="glass-card rounded-3xl p-8 relative overflow-hidden group border border-[var(--glass-border)] shadow-xl">
                   <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[var(--accent-primary)]/20 to-transparent pointer-events-none" />

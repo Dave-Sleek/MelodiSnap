@@ -186,11 +186,11 @@ export const SongCard = ({
             </div>
 
             {/* Actions Grid for Mobile / Flex for Desktop */}
-            <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-3 pt-4 w-full">
+            <div className="flex flex-wrap items-center gap-3 pt-4 w-full justify-center sm:justify-start">
               {song.previewUrl && (
                 <button
                   onClick={handlePlayToggle}
-                  className="col-span-2 sm:col-auto btn-primary-glass px-6 py-4 sm:py-3.5 rounded-2xl font-black text-xs tracking-wider flex items-center justify-center gap-3 active:scale-95 transition-all shadow-xl text-white w-full sm:w-auto"
+                  className="btn-primary-glass px-5 py-3.5 rounded-2xl font-black text-xs tracking-wider flex items-center justify-center gap-2.5 active:scale-95 transition-all shadow-xl text-white min-w-[140px] flex-1 sm:flex-none"
                 >
                   {isCurrentTrackLoading ? (
                     <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -199,13 +199,13 @@ export const SongCard = ({
                   ) : (
                     <Play className="w-4 h-4 fill-current" />
                   )}
-                  <span className="uppercase">{isCurrentTrackLoading ? 'Loading...' : isCurrentTrackPlaying ? 'Pause' : 'Play Preview'}</span>
+                  <span className="uppercase">{isCurrentTrackLoading ? 'Loading' : isCurrentTrackPlaying ? 'Pause' : 'Play Preview'}</span>
                 </button>
               )}
 
               <button
                 onClick={handleOpenSpotify}
-                className="btn-secondary-glass bg-[#1DB954]/10 hover:bg-[#1DB954] hover:text-black border-[#1DB954]/20 py-4 sm:py-3.5 px-5 rounded-2xl font-black text-[10px] sm:text-xs tracking-widest flex items-center justify-center gap-2.5 transition-all uppercase text-[#1DB954] w-full sm:w-auto shadow-lg shadow-[#1DB954]/5"
+                className="btn-secondary-glass bg-[#1DB954]/10 hover:bg-[#1DB954] hover:text-black border-[#1DB954]/20 py-3.5 px-5 rounded-2xl font-black text-[10px] sm:text-xs tracking-widest flex items-center justify-center gap-2.5 transition-all uppercase text-[#1DB954] shadow-lg shadow-[#1DB954]/5 flex-1 sm:flex-none min-w-[110px]"
               >
                 <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.5 17.3c-.2.3-.6.4-.9.2-2.8-1.7-6.2-2.1-10.3-1.1-.3.1-.7-.1-.8-.4-.1-.3.1-.7.4-.8 4.5-1 8.3-.6 11.4 1.2.3.2.4.6.2.9zm1.5-3.3c-.3.4-.8.5-1.2.3-3.2-1.9-8-2.5-11.8-1.3-.5.1-1-.2-1.1-.7s.2-1 .7-1.1c4.4-1.3 9.7-.7 13.5 1.6.4.2.5.8.2 1.2zm.1-3.4C15.2 8.3 8.7 8.1 4.9 9.3c-.6.2-1.3-.2-1.5-.8-.2-.6.2-1.3.8-1.5 4.5-1.4 11.7-1.1 16.5 1.7.6.3.8 1.1.4 1.7-.3.5-1.1.7-1.7.4z"/></svg>
                 <span>Spotify</span>
@@ -213,7 +213,7 @@ export const SongCard = ({
 
               <button
                 onClick={() => openLyrics(song)}
-                className={`py-4 sm:py-3.5 px-5 rounded-2xl font-black text-[10px] sm:text-xs tracking-widest flex items-center justify-center gap-2.5 transition-all active:scale-95 uppercase w-full sm:w-auto shadow-lg ${
+                className={`py-3.5 px-5 rounded-2xl font-black text-[10px] sm:text-xs tracking-widest flex items-center justify-center gap-2.5 transition-all active:scale-95 uppercase shadow-lg flex-1 sm:flex-none min-w-[110px] ${
                   isLyricsOpen
                     ? 'bg-[var(--accent-primary)] text-white border-transparent'
                     : 'btn-secondary-glass text-[var(--accent-primary)] border-[var(--accent-primary)]/20'
@@ -223,11 +223,11 @@ export const SongCard = ({
                 <span>Lyrics</span>
               </button>
 
-              <div className="col-span-2 flex items-center gap-3 w-full sm:w-auto">
+              <div className="flex items-center gap-2.5 w-full sm:w-auto">
                 {onToggleFavourite && (
                   <button
                     onClick={onToggleFavourite}
-                    className={`flex-1 sm:flex-none p-4 sm:p-3.5 rounded-2xl btn-secondary-glass transition-all flex items-center justify-center ${
+                    className={`flex-1 sm:flex-none p-3.5 rounded-2xl btn-secondary-glass transition-all flex items-center justify-center min-w-[50px] ${
                       song.isFavourite
                         ? 'bg-[var(--accent-primary)]/10 text-[var(--accent-primary)] border-[var(--accent-primary)]/30'
                         : 'text-[var(--text-main)]'
@@ -240,7 +240,7 @@ export const SongCard = ({
 
                 <button
                   onClick={handleShare}
-                  className="flex-1 sm:flex-none p-4 sm:p-3.5 rounded-2xl btn-secondary-glass text-[var(--accent-primary)] hover:opacity-80 transition-all border-[var(--accent-primary)]/30 flex items-center justify-center"
+                  className="flex-1 sm:flex-none p-3.5 rounded-2xl btn-secondary-glass text-[var(--accent-primary)] hover:opacity-80 transition-all border-[var(--accent-primary)]/30 flex items-center justify-center min-w-[50px]"
                   title="Share track & QR Code"
                 >
                   <Share2 className="w-5 h-5" />
