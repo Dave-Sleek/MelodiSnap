@@ -260,7 +260,14 @@ export const IdentificationProvider: React.FC<{ children: React.ReactNode }> = (
             handleRecognitionFinished(audioBlob);
           }
         }
-        stream.getTracks().forEach((track) => track.stop());
+        
+        // Ensure tracks are stopped and released immediately
+        if (stream) {
+          stream.getTracks().forEach((track) => {
+            track.stop();
+            track.enabled = false;
+          });
+        }
         cleanupAudioNodes();
       };
 

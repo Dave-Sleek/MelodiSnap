@@ -97,14 +97,14 @@ export const SongCard = ({
           stiffness: 80,
           damping: 20
         }}
-        className="glass-card rounded-3xl p-6 sm:p-8 md:p-10 shadow-2xl relative overflow-hidden max-w-3xl w-full mx-auto border border-[var(--accent-primary)]/10"
+        className="glass-card rounded-[2.5rem] p-6 sm:p-8 md:p-10 shadow-2xl relative overflow-hidden max-w-3xl w-full mx-auto border border-[var(--accent-primary)]/10"
       >
         {/* Subtle top-edge light shimmer - Single Blue Theme */}
         <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-gradient-to-r from-transparent via-[var(--accent-primary)]/20 to-transparent pointer-events-none" />
 
-        <div className="flex flex-col sm:flex-row gap-8 items-center relative z-10">
+        <div className="flex flex-col sm:flex-row gap-8 sm:gap-10 items-center sm:items-start relative z-10">
           {/* Artwork Container */}
-          <div className="relative w-48 h-48 sm:w-56 sm:h-56 rounded-2xl overflow-hidden shrink-0 shadow-2xl border border-white/10 dark:border-white/10 group">
+          <div className="relative w-56 h-56 sm:w-60 sm:h-60 rounded-[2rem] overflow-hidden shrink-0 shadow-2xl border border-white/10 group bg-slate-900">
             {song.artwork && !imageError ? (
               <img 
                 src={song.artwork} 
@@ -143,72 +143,54 @@ export const SongCard = ({
           </div>
 
           {/* Details */}
-          <div className="flex-1 min-w-0 text-center sm:text-left space-y-4">
+          <div className="flex-1 min-w-0 text-center sm:text-left space-y-5">
             <div>
               <motion.div 
-                key={`badge-${song.id || song.title}`}
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-                className="inline-flex items-center gap-1.5 text-xs font-bold text-[var(--accent-primary)] uppercase tracking-widest mb-1.5"
+                className="inline-flex items-center gap-1.5 text-[10px] sm:text-xs font-black text-[var(--accent-primary)] uppercase tracking-[0.2em] mb-3"
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-primary)]" />
-                <span>Identified Track</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-primary)] animate-pulse" />
+                <span>Track Identified</span>
               </motion.div>
               
-              {/* Subtle elegant fade-in transition effect for song title */}
               <motion.h2 
-                key={`title-${song.id || song.title}`}
                 initial={{ opacity: 0, y: 10, filter: 'blur(5px)' }}
                 animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                transition={{ 
-                  duration: 0.65, 
-                  ease: [0.16, 1, 0.3, 1],
-                  delay: 0.08
-                }}
-                className="text-2xl sm:text-3xl font-extrabold text-[var(--text-main)] truncate tracking-tight"
+                transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1], delay: 0.08 }}
+                className="text-3xl sm:text-4xl md:text-5xl font-black text-[var(--text-main)] tracking-tighter leading-[1.1] mb-2"
               >
                 {song.title}
               </motion.h2>
 
-              {/* Subtle elegant fade-in transition effect for artist name */}
               <motion.p 
-                key={`artist-${song.id || song.artist}`}
                 initial={{ opacity: 0, y: 8, filter: 'blur(3px)' }}
                 animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                transition={{ 
-                  duration: 0.65, 
-                  ease: [0.16, 1, 0.3, 1],
-                  delay: 0.2
-                }}
-                className="text-base sm:text-lg text-[var(--text-sub)] font-medium truncate mt-0.5"
+                transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
+                className="text-lg sm:text-2xl text-[var(--text-sub)] font-bold opacity-90 mb-1"
               >
                 {song.artist}
               </motion.p>
 
               {song.album && (
                 <motion.p 
-                  key={`album-${song.id || song.album}`}
                   initial={{ opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ 
-                    duration: 0.55, 
-                    ease: [0.16, 1, 0.3, 1],
-                    delay: 0.32
-                  }}
-                  className="text-xs text-[var(--text-muted)] truncate mt-1"
+                  transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1], delay: 0.32 }}
+                  className="text-xs sm:text-sm text-[var(--text-muted)] font-medium leading-relaxed"
                 >
-                  Album · {song.album}
+                  {song.album}
                 </motion.p>
               )}
             </div>
 
-            {/* Actions */}
-            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 pt-2">
+            {/* Actions Grid for Mobile / Flex for Desktop */}
+            <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-3 pt-4 w-full">
               {song.previewUrl && (
                 <button
                   onClick={handlePlayToggle}
-                  className="btn-primary-glass px-6 py-3 rounded-xl font-semibold text-xs tracking-wider flex items-center gap-2.5 active:scale-95 transition-all shadow-lg text-white"
+                  className="col-span-2 sm:col-auto btn-primary-glass px-6 py-4 sm:py-3.5 rounded-2xl font-black text-xs tracking-wider flex items-center justify-center gap-3 active:scale-95 transition-all shadow-xl text-white w-full sm:w-auto"
                 >
                   {isCurrentTrackLoading ? (
                     <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -217,61 +199,60 @@ export const SongCard = ({
                   ) : (
                     <Play className="w-4 h-4 fill-current" />
                   )}
-                  <span>{isCurrentTrackLoading ? 'Buffering...' : isCurrentTrackPlaying ? 'Pause Preview' : 'Play 30s Preview'}</span>
+                  <span className="uppercase">{isCurrentTrackLoading ? 'Loading...' : isCurrentTrackPlaying ? 'Pause' : 'Play Preview'}</span>
                 </button>
               )}
-
-              {onToggleFavourite && (
-                <button
-                  onClick={onToggleFavourite}
-                  className={`p-3 rounded-xl btn-secondary-glass transition-all ${
-                    song.isFavourite
-                      ? 'bg-[var(--accent-primary)]/10 text-[var(--accent-primary)] border-[var(--accent-primary)]/20 shadow-[0_0_15px_rgba(0,122,255,0.15)]'
-                      : 'text-[var(--text-main)]'
-                  }`}
-                  title={song.isFavourite ? 'Remove from Favourites' : 'Add to Favourites'}
-                >
-                  <Heart className={`w-4 h-4 ${song.isFavourite ? 'fill-current' : ''}`} />
-                </button>
-              )}
-
-              <button
-                onClick={handleShare}
-                className="p-3 rounded-xl btn-secondary-glass text-[var(--accent-primary)] hover:opacity-80 transition-all border-[var(--accent-primary)]/20"
-                title="Share track & QR Code"
-              >
-                <Share2 className="w-4 h-4" />
-              </button>
 
               <button
                 onClick={handleOpenSpotify}
-                className="px-4 py-3 rounded-xl bg-[#1DB954] hover:bg-[#1DB954]/90 text-black font-bold text-xs tracking-wide flex items-center gap-2 shadow-lg shadow-[#1DB954]/20 transition-all hover:-translate-y-0.5 active:translate-y-0"
+                className="btn-secondary-glass bg-[#1DB954]/10 hover:bg-[#1DB954] hover:text-black border-[#1DB954]/20 py-4 sm:py-3.5 px-5 rounded-2xl font-black text-[10px] sm:text-xs tracking-widest flex items-center justify-center gap-2.5 transition-all uppercase text-[#1DB954] w-full sm:w-auto shadow-lg shadow-[#1DB954]/5"
               >
-                <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.5 17.3c-.2.3-.6.4-.9.2-2.8-1.7-6.2-2.1-10.3-1.1-.3.1-.7-.1-.8-.4-.1-.3.1-.7.4-.8 4.5-1 8.3-.6 11.4 1.2.3.2.4.6.2.9zm1.5-3.3c-.3.4-.8.5-1.2.3-3.2-1.9-8-2.5-11.8-1.3-.5.1-1-.2-1.1-.7s.2-1 .7-1.1c4.4-1.3 9.7-.7 13.5 1.6.4.2.5.8.2 1.2zm.1-3.4C15.2 8.3 8.7 8.1 4.9 9.3c-.6.2-1.3-.2-1.5-.8-.2-.6.2-1.3.8-1.5 4.5-1.4 11.7-1.1 16.5 1.7.6.3.8 1.1.4 1.7-.3.5-1.1.7-1.7.4z"/></svg>
+                <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.5 17.3c-.2.3-.6.4-.9.2-2.8-1.7-6.2-2.1-10.3-1.1-.3.1-.7-.1-.8-.4-.1-.3.1-.7.4-.8 4.5-1 8.3-.6 11.4 1.2.3.2.4.6.2.9zm1.5-3.3c-.3.4-.8.5-1.2.3-3.2-1.9-8-2.5-11.8-1.3-.5.1-1-.2-1.1-.7s.2-1 .7-1.1c4.4-1.3 9.7-.7 13.5 1.6.4.2.5.8.2 1.2zm.1-3.4C15.2 8.3 8.7 8.1 4.9 9.3c-.6.2-1.3-.2-1.5-.8-.2-.6.2-1.3.8-1.5 4.5-1.4 11.7-1.1 16.5 1.7.6.3.8 1.1.4 1.7-.3.5-1.1.7-1.7.4z"/></svg>
                 <span>Spotify</span>
               </button>
 
-              {/* Show Real-time Lyrics Button */}
               <button
                 onClick={() => openLyrics(song)}
-                className={`px-4 py-3 rounded-xl font-bold text-xs tracking-wide flex items-center gap-2 transition-all active:scale-95 shadow-sm border ${
+                className={`py-4 sm:py-3.5 px-5 rounded-2xl font-black text-[10px] sm:text-xs tracking-widest flex items-center justify-center gap-2.5 transition-all active:scale-95 uppercase w-full sm:w-auto shadow-lg ${
                   isLyricsOpen
-                    ? 'bg-[var(--accent-primary)] text-white border-transparent shadow-[0_0_15px_rgba(0,122,255,0.4)]'
-                    : 'btn-secondary-glass text-[var(--accent-primary)] hover:border-[var(--accent-primary)]/40 border-[var(--accent-primary)]/20'
+                    ? 'bg-[var(--accent-primary)] text-white border-transparent'
+                    : 'btn-secondary-glass text-[var(--accent-primary)] border-[var(--accent-primary)]/20'
                 }`}
-                title={isLyricsOpen ? 'Lyrics open' : 'Show real-time lyrics'}
               >
                 <Mic2 className="w-4 h-4" />
-                <span>{isLyricsOpen ? 'Lyrics Open' : 'Show Lyrics'}</span>
+                <span>Lyrics</span>
               </button>
 
+              <div className="col-span-2 flex items-center gap-3 w-full sm:w-auto">
+                {onToggleFavourite && (
+                  <button
+                    onClick={onToggleFavourite}
+                    className={`flex-1 sm:flex-none p-4 sm:p-3.5 rounded-2xl btn-secondary-glass transition-all flex items-center justify-center ${
+                      song.isFavourite
+                        ? 'bg-[var(--accent-primary)]/10 text-[var(--accent-primary)] border-[var(--accent-primary)]/30'
+                        : 'text-[var(--text-main)]'
+                    }`}
+                    title={song.isFavourite ? 'Remove from Favourites' : 'Add to Favourites'}
+                  >
+                    <Heart className={`w-5 h-5 ${song.isFavourite ? 'fill-current' : ''}`} />
+                  </button>
+                )}
+
+                <button
+                  onClick={handleShare}
+                  className="flex-1 sm:flex-none p-4 sm:p-3.5 rounded-2xl btn-secondary-glass text-[var(--accent-primary)] hover:opacity-80 transition-all border-[var(--accent-primary)]/30 flex items-center justify-center"
+                  title="Share track & QR Code"
+                >
+                  <Share2 className="w-5 h-5" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Real-time Canvas Music Visualizer embedded in Hero Display */}
-        <div className="mt-7 pt-5 border-t border-[var(--glass-border)]">
-          <CanvasMusicVisualizer height={110} variant="compact" />
+        <div className="mt-10 pt-6 border-t border-[var(--glass-border)]">
+          <CanvasMusicVisualizer height={100} variant="compact" />
         </div>
       </motion.div>
     );

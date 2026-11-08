@@ -164,14 +164,14 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     };
   }, [showToast]);
 
-  const ensureAudioGraph = useCallback(() => {
+  const ensureAudioGraph = useCallback(async () => {
     try {
       if (!audioCtxRef.current) {
-        const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+        const AudioContextClass = (window as any).AudioContext || (window as any).webkitAudioContext;
         if (!AudioContextClass) return;
         const ctx = new AudioContextClass();
         const analyser = ctx.createAnalyser();
-        analyser.fftSize = 128; // 64 frequency bands
+        analyser.fftSize = 128;
         analyser.smoothingTimeConstant = 0.82;
 
         if (audioRef.current && !sourceNodeRef.current) {
@@ -190,10 +190,12 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       }
 
       if (audioCtxRef.current && audioCtxRef.current.state === 'suspended') {
-        audioCtxRef.current.resume().catch(() => {});
+        await audioCtxRef.current.resume().catch((err) => {
+          console.warn('AudioContext resume failed:', err);
+        });
       }
     } catch (err) {
-      console.warn('Audio graph initialization note:', err);
+      console.warn('Audio graph initialization error:', err);
     }
   }, []);
 
@@ -206,8 +208,14 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
         return;
       }
 
-      ensureAudioGraph();
+      await ensureAudioGraph();
       setIsLoading(true);
+      
+      // Secondary safety check for context state
+      if (audioCtxRef.current && audioCtxRef.current.state === 'suspended') {
+        await audioCtxRef.current.resume();
+      }
+
       const promise = audio.play();
       playPromiseRef.current = promise;
 
@@ -245,6 +253,11 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
     if (analyser && isPlaying) {
       try {
+        // Aggressive resume for stuck contexts (especially after mic usage)
+        if (audioCtxRef.current && audioCtxRef.current.state === 'suspended') {
+          audioCtxRef.current.resume().catch(() => {});
+        }
+
         analyser.getByteFrequencyData(freq as any);
         analyser.getByteTimeDomainData(timeBuff as any);
         let sum = 0;
