@@ -54,7 +54,7 @@ export const Home = ({ isOffline }: { isOffline?: boolean }) => {
             className="text-center mb-12 sm:mb-20 space-y-4"
           >
             <h1 className="text-5xl sm:text-7xl font-black text-[var(--text-main)] tracking-tight text-balance leading-[1.1]">
-              Capture every <span className="text-gradient">melody.</span>
+              Capture every <span className="text-[var(--accent-primary)]">melody.</span>
             </h1>
             <p className="text-base sm:text-xl text-[var(--text-muted)] max-w-xl mx-auto font-medium leading-relaxed opacity-80">
               Experience instant music recognition. Identify tracks, explore lyrics, and sync to your library in one tap.
