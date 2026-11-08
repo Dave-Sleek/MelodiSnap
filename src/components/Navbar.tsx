@@ -22,10 +22,20 @@ export const Navbar = () => {
     }
   };
 
-  // Automatically navigate to Home when a song is identified if not already there
+  // Tracks the last song identified to ensure we only redirect to Home ONCE per discovery
+  const lastIdentifiedSongId = React.useRef<string | null>(null);
+
+  // Automatically navigate to Home ONLY when a new song is first identified
   React.useEffect(() => {
-    if (identifiedSong && location.pathname !== '/') {
-      navigate('/');
+    const currentId = identifiedSong ? (identifiedSong.id || `${identifiedSong.title}-${identifiedSong.artist}`) : null;
+    
+    if (currentId && currentId !== lastIdentifiedSongId.current) {
+      lastIdentifiedSongId.current = currentId;
+      if (location.pathname !== '/') {
+        navigate('/');
+      }
+    } else if (!identifiedSong) {
+      lastIdentifiedSongId.current = null;
     }
   }, [identifiedSong, navigate, location.pathname]);
 

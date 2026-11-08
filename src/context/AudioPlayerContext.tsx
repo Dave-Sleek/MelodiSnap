@@ -98,6 +98,10 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     const handlePlaying = () => {
       setIsLoading(false);
       setIsPlaying(true);
+      // Safety check: ensure AudioContext is resumed when playback starts
+      if (audioCtxRef.current && audioCtxRef.current.state === 'suspended') {
+        audioCtxRef.current.resume().catch(err => console.warn('Context resume on play failed:', err));
+      }
     };
 
     const handlePause = () => {
@@ -145,6 +149,15 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     audio.addEventListener('ended', handleEnded);
     audio.addEventListener('error', handleError);
 
+    // Initial hardware resume attempt on user interaction if context exists
+    const resumeOnInteraction = () => {
+      if (audioCtxRef.current && audioCtxRef.current.state === 'suspended') {
+        audioCtxRef.current.resume().catch(() => {});
+      }
+    };
+    window.addEventListener('mousedown', resumeOnInteraction);
+    window.addEventListener('touchstart', resumeOnInteraction);
+
     return () => {
       try {
         audio.pause();
@@ -161,6 +174,8 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       audio.removeEventListener('pause', handlePause);
       audio.removeEventListener('ended', handleEnded);
       audio.removeEventListener('error', handleError);
+      window.removeEventListener('mousedown', resumeOnInteraction);
+      window.removeEventListener('touchstart', resumeOnInteraction);
     };
   }, [showToast]);
 
@@ -477,6 +492,21 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     setProgress(0);
     setCurrentTime(0);
   }, []);
+
+  // Safety check: ensure element is in sync with state when track changes
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio || !currentTrack || !currentTrack.previewUrl) return;
+
+    // If source isn't set yet or doesn't match, this is a state mismatch that needs correction
+    if (audio.src !== currentTrack.previewUrl && !currentTrack.previewUrl.startsWith('synth:')) {
+      audio.src = currentTrack.previewUrl;
+      audio.load();
+      if (isPlaying) {
+        executePlay(audio);
+      }
+    }
+  }, [currentTrack, isPlaying, executePlay]);
 
   return (
     <AudioPlayerContext.Provider
